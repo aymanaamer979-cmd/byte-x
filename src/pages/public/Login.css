@@ -1,0 +1,230 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 70px); 
+  background-color: #05070a; 
+  padding: 40px 20px;
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.login-page-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px; 
+  max-width: 1100px;
+  width: 100%;
+}
+
+/* ستايل القسم الترحيبي الفخم */
+.welcome-promo-section {
+  flex: 1;
+  text-align: right;
+  max-width: 500px;
+}
+
+.promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(243, 186, 47, 0.1);
+  border: 1px solid rgba(243, 186, 47, 0.25);
+  color: #f3ba2f;
+  padding: 6px 14px;
+  border-radius: 50px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.promo-title {
+  color: #ffffff;
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0 0 15px 0;
+}
+
+.highlight-amount {
+  color: #f3ba2f;
+  font-size: 46px;
+  font-weight: 900;
+  text-shadow: 0 0 20px rgba(243, 186, 47, 0.3);
+  display: inline-block;
+  margin: 5px 0;
+}
+
+.promo-subtitle {
+  color: #9aa4b2;
+  font-size: 16px;
+  line-height: 1.6;
+  margin: 0 0 30px 0;
+}
+
+.promo-features {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #eaecef;
+  font-size: 14px;
+}
+
+.feature-item i {
+  color: #02c076; 
+  font-size: 16px;
+}
+
+/* 🎯 تنسيق كارد تسجيل الدخول المبسط */
+.login-card.simplified-card {
+  background-color: #151a26; 
+  border: 1px solid #323f5a; 
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  padding: 45px 35px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 35px;
+}
+
+.login-header h2 {
+  color: #ffffff;
+  font-size: 24px;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+.login-header p {
+  color: #9aa4b2;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* حاوية أزرار السوشيال ميديا */
+.social-login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* مسافة مريحة بين الزرين */
+}
+
+/* الستايل المشترك للأزرار */
+.btn-social-auth {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.social-icon {
+  height: 22px;
+  width: 22px;
+  object-fit: contain;
+}
+
+/* تخصيص زر جوجل */
+.google-auth {
+  background-color: #ffffff;
+  color: #1e2329;
+  border: 1px solid #e6e8ea;
+}
+
+.google-auth:hover {
+  background-color: #f4f6f8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+/* تخصيص زر فيسبوك */
+.facebook-auth {
+  background-color: #1877f2; /* لون فيسبوك الرسمي */
+  color: #ffffff;
+  border: none;
+}
+
+.facebook-auth:hover {
+  background-color: #166fe5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3);
+}
+
+/* نص الملاحظة والقوانين أسفل الكارد */
+.login-notice-text {
+  text-align: center;
+  margin-top: 35px;
+  font-size: 12px;
+  color: #718096;
+  line-height: 1.5;
+}
+
+.login-notice-text a {
+  color: #f3ba2f;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.login-notice-text a:hover {
+  text-decoration: underline;
+}
+
+/* 📱 التجاوب مع الموبايل والشاشات المتوسطة */
+@media (max-width: 992px) {
+  .login-page-wrapper {
+    flex-direction: column; 
+    gap: 40px;
+    text-align: center;
+  }
+
+  .welcome-promo-section {
+    text-align: center;
+    max-width: 100%;
+  }
+
+  .promo-title {
+    font-size: 28px;
+  }
+
+  .highlight-amount {
+    font-size: 38px;
+  }
+
+  .promo-features {
+    align-items: center; 
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 20px 15px; 
+  }
+  .login-card.simplified-card {
+    padding: 35px 20px;
+    border-color: #3e4e6f; 
+  }
+  .btn-social-auth {
+    font-size: 14px;
+    padding: 12px;
+  }
+}

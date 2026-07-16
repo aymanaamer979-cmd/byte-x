@@ -1,0 +1,504 @@
+
+/* النوافذ المنبثقة (Modals) */
+/* ==================== نظام المودالز المطور لـ React ==================== */
+.modal-overlay { 
+  position: fixed; 
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%; 
+  background-color: rgba(3, 5, 9, 0.85); 
+  z-index: 1000; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  backdrop-filter: blur(4px); 
+  padding: 20px;
+  /* أنيميشن الظهور الفوري للملف عند الرندر */
+  animation: fadeInOverlay 0.25s ease-in-out forwards;
+}
+
+.modal-card { 
+  background-color: #151a26; 
+  border: 1px solid #263147; 
+  border-radius: 12px; 
+  max-width: 680px; 
+  width: 100%; 
+  padding: 35px 25px; 
+  position: relative; 
+  text-align: right; 
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5); 
+  /* أنيميشن انسيابي لظهور الكارت من أعلى لأسفل */
+  animation: slideInCard 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
+}
+
+.modal-close { 
+  position: absolute; 
+  top: 15px; 
+  left: 15px; 
+  background: transparent; 
+  border: none; 
+  color: #b7bdc6; 
+  font-size: 22px; 
+  cursor: pointer; 
+  transition: 0.2s; 
+}
+
+.modal-close:hover { 
+  color: #f3ba2f; 
+}
+
+.modal-header-title { 
+  font-size: 22px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+  margin-bottom: 20px; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  border-bottom: 1px solid #263147; 
+  padding-bottom: 12px; 
+}
+
+.modal-body-text { 
+  color: #e2e8f0; 
+  font-size: 15px; 
+  line-height: 1.8; 
+  text-align: justify; 
+}
+
+.info-rows-container { 
+  display: flex; 
+  flex-direction: column; 
+  margin-top: 15px; 
+  max-height: 400px; 
+  overflow-y: auto; 
+  padding-right: 5px; 
+}
+
+.info-rows-container::-webkit-scrollbar { 
+  width: 5px; 
+}
+
+.info-rows-container::-webkit-scrollbar-thumb { 
+  background: #263147; 
+  border-radius: 4px; 
+}
+
+.info-row-item { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 14px 5px; 
+  border-bottom: 1px solid #263147; 
+  gap: 15px; 
+}
+
+.info-row-item:last-child { 
+  border-bottom: none; 
+}
+
+.row-text-content { 
+  color: #b7bdc6; 
+  font-size: 14px; 
+  line-height: 1.6; 
+  text-align: right; 
+}
+
+.row-leading-icon { 
+  color: #02c076; 
+  font-size: 16px; 
+  flex-shrink: 0; 
+}
+
+.row-check-badge { 
+  color: #f3ba2f; 
+  font-size: 15px; 
+  flex-shrink: 0; 
+}
+
+.protection-icon-top { 
+  font-size: 55px; 
+  color: #02c076; 
+  text-align: center; 
+  display: block; 
+  margin: 0 auto 15px; 
+  text-shadow: 0 0 15px rgba(2, 192, 118, 0.2); 
+}
+
+.protection-lead-text { 
+  color: #ffffff; 
+  font-size: 15px; 
+  line-height: 1.7; 
+  text-align: center; 
+  margin-bottom: 20px; 
+  background-color: rgba(2, 192, 118, 0.05); 
+  border: 1px dashed rgba(2, 192, 118, 0.2); 
+  padding: 15px; 
+  border-radius: 8px; 
+}
+
+/* تايم لاين الأنيميشن الجديد المتوافق مع رياكت */
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInCard {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+
+
+
+
+
+
+
+/* ==================== خطط الأرباح الاستثمارية inside Modal ==================== */
+.plans-grid { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 15px; 
+  margin-top: 15px; 
+}
+
+.plan-card-item { 
+  background-color: #0b0e14; 
+  border: 1px solid #263147; 
+  border-radius: 8px; 
+  padding: 20px 15px; 
+  text-align: center; 
+  /* تحسين الـ transition ليكون أنعم مع رندر React */
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s ease; 
+  will-change: transform;
+}
+
+.plan-card-item:hover { 
+  border-color: #3861fb; 
+  transform: translateY(-4px); /* زودنا التأثير حركة بسيطة عشان يبان تفاعلي أكتر */
+}
+
+.plan-card-item.featured { 
+  border-color: #f3ba2f; 
+  background: linear-gradient(180deg, #151a26 0%, #0b0e14 100%); 
+}
+
+.plan-name { 
+  font-size: 18px; 
+  font-weight: bold; 
+  color: #ffffff; 
+  margin-bottom: 10px; 
+}
+
+.plan-card-item.featured .plan-name { 
+  color: #f3ba2f; 
+}
+
+.plan-profit { 
+  font-size: 24px; 
+  font-weight: bold; 
+  color: #02c076; 
+  margin-bottom: 15px; 
+}
+
+.plan-details { 
+  font-size: 13px; 
+  color: #b7bdc6; 
+  line-height: 1.6; 
+  margin-bottom: 15px; 
+  text-align: right; 
+}
+
+.plan-details li { 
+  list-style: none; 
+  margin-bottom: 6px; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+}
+
+.plan-details li i { 
+  color: #02c076; 
+  font-size: 11px; 
+}
+
+.btn-plan-select { 
+  width: 100%; 
+  background-color: #3861fb; 
+  color: white; 
+  border: none; 
+  padding: 8px; 
+  border-radius: 4px; 
+  font-weight: bold; 
+  font-size: 13px; 
+  cursor: pointer; 
+  transition: background-color 0.2s ease; 
+}
+
+.btn-plan-select:hover { 
+  background-color: #244bdf; 
+}
+
+.plan-card-item.featured .btn-plan-select { 
+  background-color: #f3ba2f; 
+  color: #000; 
+}
+
+.plan-card-item.featured .btn-plan-select:hover { 
+  background-color: #dba426; 
+}
+
+/* تحسين استجابة الكروت على الشاشات الصغيرة (Responsive) */
+@media (max-width: 768px) {
+  .plans-grid {
+    grid-template-columns: 1fr; /* ترتيب الكروت تحت بعض في الموبايل */
+    gap: 12px;
+  }
+}
+
+
+
+
+
+
+/* ==================== نظام الشات العائم المطور لـ React ==================== */
+.floating-chat-widget { 
+  position: fixed; 
+  bottom: 25px; 
+  left: 25px; 
+  z-index: 999; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: flex-start; 
+}
+
+.chat-trigger-btn { 
+  width: 60px; 
+  height: 60px; 
+  border-radius: 50%; 
+  background-color: #02c076; 
+  color: #ffffff; 
+  border: none; 
+  font-size: 26px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  box-shadow: 0 4px 16px rgba(2, 192, 118, 0.4); 
+  transition: transform 0.3s, background-color 0.3s; 
+  position: relative; 
+  animation: chat-pulse 2s infinite ease-in-out; 
+}
+
+.chat-trigger-btn:hover { 
+  background-color: #019e61; 
+  transform: scale(1.05); 
+}
+
+.chat-trigger-btn::after { 
+  content: ''; 
+  position: absolute; 
+  top: 2px; 
+  right: 2px; 
+  width: 12px; 
+  height: 12px; 
+  background-color: #00ff00; 
+  border: 2px solid #151a26; 
+  border-radius: 50%; 
+}
+
+@keyframes chat-pulse { 
+  0% { box-shadow: 0 0 0 0 rgba(2, 192, 118, 0.6); } 
+  70% { box-shadow: 0 0 0 15px rgba(2, 192, 118, 0); } 
+  100% { box-shadow: 0 0 0 0 rgba(2, 192, 118, 0); } 
+}
+
+.chat-box-card { 
+  position: absolute; 
+  bottom: 75px; 
+  left: 0; 
+  width: 350px; 
+  height: 460px; 
+  background-color: #151a26; 
+  border: 1px solid #263147; 
+  border-radius: 12px; 
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); 
+  display: flex; 
+  flex-direction: column; 
+  overflow: hidden; 
+  /* التعديل هنا: يظهر فوراً بأنيميشن React عند الضغط على الزر */
+  opacity: 1; 
+  visibility: visible; 
+  transform: translateY(0) scale(1); 
+  animation: popInChat 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.chat-box-header { 
+  background-color: #1e2638; 
+  border-bottom: 1px solid #263147; 
+  padding: 12px 15px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+}
+
+.chat-profile-info { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+}
+
+.chat-avatar { 
+  width: 35px; 
+  height: 35px; 
+  border-radius: 50%; 
+  background-color: #263147; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: #f3ba2f; 
+  border: 1px solid #02c076; 
+}
+
+.chat-user-name { 
+  font-size: 14px; 
+  font-weight: bold; 
+  color: #ffffff; 
+}
+
+.chat-status-text { 
+  font-size: 11px; 
+  color: #02c076; 
+  display: block; 
+  margin-top: 2px; 
+}
+
+.chat-box-close { 
+  background: transparent; 
+  border: none; 
+  color: #b7bdc6; 
+  font-size: 18px; 
+  cursor: pointer; 
+  transition: 0.2s; 
+}
+
+.chat-box-close:hover { 
+  color: #f3ba2f; 
+}
+
+.chat-messages-body { 
+  flex: 1; 
+  padding: 15px; 
+  overflow-y: auto; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 12px; 
+  background-color: #0b0e14; 
+}
+
+/* تحسين السكرول بار لشكل الرسائل */
+.chat-messages-body::-webkit-scrollbar {
+  width: 4px;
+}
+.chat-messages-body::-webkit-scrollbar-thumb {
+  background: #263147;
+  border-radius: 10px;
+}
+
+.chat-msg { 
+  max-width: 80%; 
+  padding: 10px 14px; 
+  border-radius: 8px; 
+  font-size: 13px; 
+  line-height: 1.5; 
+}
+
+.chat-msg.incoming { 
+  background-color: #151a26; 
+  color: #e2e8f0; 
+  align-self: flex-start; 
+  border-top-right-radius: 0; 
+  border: 1px solid #263147; 
+  text-align: right; 
+}
+
+.chat-msg.outgoing { 
+  background-color: #02c076; 
+  color: #ffffff; 
+  align-self: flex-end; 
+  border-top-left-radius: 0; 
+  text-align: right; 
+}
+
+.chat-box-footer { 
+  padding: 10px; 
+  background-color: #151a26; 
+  border-top: 1px solid #263147; 
+  display: flex; 
+  gap: 8px; 
+  align-items: center; 
+}
+
+.chat-input-field { 
+  flex: 1; 
+  background-color: #0b0e14; 
+  border: 1px solid #263147; 
+  border-radius: 6px; 
+  padding: 8px 12px; 
+  color: #ffffff; 
+  font-size: 13px; 
+  outline: none; 
+  text-align: right; 
+  transition: 0.3s; 
+}
+
+.chat-input-field:focus { 
+  border-color: #02c076; 
+}
+
+.chat-send-btn { 
+  width: 36px; 
+  height: 36px; 
+  background-color: #263147; 
+  color: #b7bdc6; 
+  border: none; 
+  border-radius: 6px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  transition: 0.3s; 
+}
+
+.chat-send-btn:hover { 
+  background-color: #02c076; 
+  color: white; 
+}
+
+/* أنيميشن ظهور صندوق الشات بشكل بوب-أب مرن */
+@keyframes popInChat {
+  from { 
+    transform: translateY(20px) scale(0.95); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0) scale(1); 
+    opacity: 1; 
+  }
+}
+
+
+
+
+@media (max-width: 1024px) {
+  .regulation-container { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 768px) {
+  .regulation-title { font-size: 20px; margin-bottom: 25px; }
+  .regulation-container { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 10px; }
+  .reg-item { min-height: 120px; padding: 12px 6px; }
+  .reg-icon { max-height: 30px; }
+  .reg-label { font-size: 11px; }
+}

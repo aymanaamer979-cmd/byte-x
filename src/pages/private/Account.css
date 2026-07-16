@@ -1,0 +1,344 @@
+.account-page-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 95vh;
+  padding: 50px 20px;
+  background-color: #08080a;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.account-card {
+  position: relative; /* مهم جداً لتثبيت أيقونة الترس داخل الكرت بدقة */
+  background: #111115;
+  border: 1px solid #1f2029;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  padding: 35px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+  transition: all 0.3s ease;
+}
+
+.account-card:hover {
+  border-color: #00ffcc; 
+  box-shadow: 0 15px 40px rgba(0, 255, 204, 0.05);
+}
+
+/* زر أيقونة الترس الصغير في الزاوية اليسرى العلوية */
+.account-settings-gear-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.2s ease;
+  padding: 5px;
+  line-height: 1;
+  z-index: 10;
+  outline: none;
+}
+
+.account-settings-gear-btn:hover {
+  transform: rotate(45deg); /* تأثير دوران خفيف وأنيق عند الحوم فوق الترس */
+  opacity: 0.8;
+}
+
+.account-header-info {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.account-avatar-wrapper {
+  display: inline-block;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.account-large-avatar {
+  width: 95px;
+  height: 95px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #00ffcc;
+  box-shadow: 0 0 20px rgba(0, 255, 204, 0.15);
+}
+
+.kyc-badge {
+  position: absolute;
+  bottom: 0;
+  right: -5px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.kyc-badge.verified {
+  background-color: #00ffcc;
+  color: #000;
+}
+
+.account-header-info h2 {
+  color: #fff;
+  font-size: 24px;
+  margin: 12px 0 6px 0;
+}
+
+.user-email-badge {
+  color: #8892b0;
+  font-size: 13px;
+  background: #1a1b23;
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #232635;
+}
+
+/* كرت المحفظة المطور */
+.portfolio-mini-card {
+  background: #181922;
+  border: 1px solid #232635;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.portfolio-row-main {
+  text-align: center;
+  border-bottom: 1px solid #232635;
+  padding-bottom: 12px;
+}
+
+.portfolio-item-total {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.total-balance {
+  font-size: 26px !important;
+  color: #00ffcc !important;
+}
+
+.portfolio-row-grid {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+}
+
+.portfolio-sub-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.portfolio-label {
+  font-size: 12px;
+  color: #8892b0;
+}
+
+.portfolio-value {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.profit-color {
+  color: #00ffcc !important;
+}
+
+/* أزرار الإيداع والسحب بعد الاختصار */
+.wallet-quick-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.deposit-btn {
+  background-color: #00ffcc;
+  color: #08080a;
+}
+
+.deposit-btn:hover {
+  background-color: #00e6b8;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.25);
+}
+
+.withdraw-btn {
+  background-color: #1a1b23;
+  color: #fff;
+  border: 1px solid #232635;
+}
+
+.withdraw-btn:hover {
+  background-color: #232635;
+  border-color: #8892b0;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #232635;
+  margin: 25px 0;
+}
+
+/* قسم آخر العمليات والسجل الفرعي */
+.transactions-section {
+  text-align: right;
+  margin-bottom: 25px;
+}
+
+.transactions-section h3 {
+  color: #fff;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.no-tx-text {
+  color: #555c7d;
+  font-size: 13px;
+  text-align: center;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transaction-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #181922;
+  border: 1px solid #232635;
+  padding: 12px 16px;
+  border-radius: 10px;
+}
+
+.tx-info-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tx-icon-badge {
+  font-size: 18px;
+  background: #1e202e;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+}
+
+.tx-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+}
+
+.tx-type-text {
+  color: #fff;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.tx-date {
+  color: #555c7d;
+  font-size: 11px;
+}
+
+.tx-status-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.tx-amount {
+  color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.tx-status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.tx-status.completed {
+  background: rgba(0, 255, 204, 0.1);
+  color: #00ffcc;
+}
+
+.tx-status.pending {
+  background: rgba(255, 179, 0, 0.1);
+  color: #ffb300;
+}
+
+.tx-status.failed {
+  background: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+}
+
+/* زر تسجيل الخروج السفلي الفاخر */
+.btn-logout-danger-custom {
+  width: 100%;
+  background: transparent;
+  color: #ff4d4d;
+  border: 1px solid #ff4d4d;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-logout-danger-custom:hover {
+  background: rgba(255, 77, 77, 0.08);
+}
+
+/* لودينج تحميل الواجهة */
+.account-loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  gap: 15px;
+  color: #00ffcc;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 255, 204, 0.1);
+  border-top-color: #00ffcc;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,70 @@
+/* الإحصائيات وجزء الثقة */
+.main-grid-container { 
+  max-width: 1000px; 
+  width: 100%; 
+  margin: 0 auto 50px; 
+  padding: 0 20px; 
+}
+.stats-container, .trust-container { 
+  display: flex; 
+  justify-content: space-around; 
+  gap: 20px; 
+  margin-bottom: 20px; 
+}
+.trust-container { 
+  margin-bottom: 0; 
+}
+.stat-item { 
+  text-align: center; 
+  flex: 1; 
+  min-width: 200px; 
+  border: 1px solid #263147; 
+  padding: 20px; 
+  border-radius: 8px; 
+  background-color: #151a26; 
+  transition: 0.3s; 
+}
+.stat-item:hover { 
+  border-color: #2c3b54; 
+}
+.stat-number { 
+  font-size: 32px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+  margin-bottom: 5px; 
+}
+.stat-label { 
+  color: #b7bdc6; 
+  font-size: 14px; 
+}
+.stat-icon { 
+  max-height: 40px; 
+  width: auto; 
+  margin-bottom: 10px; 
+  vertical-align: middle; 
+}
+.trust-flex { 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 10px; 
+  margin-bottom: 5px; 
+}
+.trust-rating { 
+  font-size: 32px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+}
+
+
+
+
+.phone-trust-item { display: none; }
+
+@media (max-width: 768px) {
+  .main-grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 0 15px; margin-bottom: 40px; }
+  .stats-container, .trust-container { display: contents; }
+  .stat-item { min-width: unset; padding: 15px 10px; }
+  .desktop-trust-item { display: none; }
+  .phone-trust-item { display: block !important; }
+}

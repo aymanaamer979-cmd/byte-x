@@ -1,0 +1,64 @@
+
+
+/* الجوائز */
+.awards-section { 
+  max-width: 1000px; 
+  width: 100%; 
+  margin: 0 auto 60px; 
+  padding: 0 20px; 
+}
+.awards-title { 
+  font-size: 26px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+  text-align: center; 
+  margin-bottom: 35px; 
+}
+.awards-container { 
+  display: grid; 
+  grid-template-columns: repeat(3, 1fr); 
+  gap: 20px; 
+}
+.award-item { 
+  text-align: center; 
+  border: 1px solid #263147; 
+  padding: 30px 20px; 
+  border-radius: 8px; 
+  background-color: #151a26; 
+  transition: 0.3s; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  min-height: 190px; 
+}
+.award-item:hover { 
+  border-color: #02c076; 
+  transform: translateY(-3px); 
+}
+.award-icon-fa { 
+  font-size: 40px; 
+  color: #f3ba2f; 
+  margin-bottom: 15px; 
+  text-shadow: 0 0 10px rgba(243, 186, 47, 0.3); 
+}
+.award-name { 
+  color: #ffffff; 
+  font-size: 18px; 
+  font-weight: bold; 
+  margin-bottom: 8px; 
+}
+.award-desc { 
+  color: #b7bdc6; 
+  font-size: 14px; 
+  line-height: 1.5; 
+}
+
+
+
+
+@media (max-width: 768px) {
+  .awards-title { font-size: 20px; margin-bottom: 25px; }
+  .awards-container { grid-template-columns: 1fr; gap: 15px; }
+  .award-item { min-height: 150px; padding: 20px 15px; }
+}

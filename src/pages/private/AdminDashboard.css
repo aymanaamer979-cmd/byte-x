@@ -1,0 +1,564 @@
+.admin-dashboard-page {
+  padding: 32px 20px 60px;
+  min-height: 70vh;
+  direction: rtl; /* لضمان محاذاة اللوحة بشكل صحيح باللغة العربية */
+}
+
+.admin-dashboard-card {
+  max-width: 1200px; /* قمنا بزيادة العرض قليلاً ليتسع للبيانات الجديدة */
+  margin: 0 auto;
+  background: #0f1117;
+  border: 1px solid #1f2937;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+}
+
+.admin-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.admin-eyebrow {
+  margin: 0 0 6px;
+  color: #00ffcc;
+  font-size: 13px;
+}
+
+.admin-header-row h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 28px;
+}
+
+.admin-role-badge {
+  background: #00ffcc22;
+  color: #00ffcc;
+  border: 1px solid #00ffcc55;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+/* شبكة الإحصائيات - تم تعديلها لتدعم 4 أعمدة بالتساوي */
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.admin-stat-box {
+  background: #161a23;
+  border: 1px solid #243043;
+  border-radius: 14px;
+  padding: 18px 16px;
+  color: #fff;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.admin-stat-box:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f644;
+}
+
+.admin-stat-box span {
+  display: block;
+  color: #a9b5c8;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.admin-stat-box strong {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.admin-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+  border-bottom: 1px solid #1f2937;
+  padding: 14px 12px;
+  text-align: right;
+  color: #fff;
+  white-space: nowrap; /* تمنع التواء النصوص بشكل غير منسق داخل الجدول */
+}
+
+.admin-users-table th {
+  color: #a9b5c8;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* تنسيق وتلوين بادجات الأرصدة والماليات داخل الجدول */
+.finance-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.balance-color {
+  background-color: rgba(14, 165, 233, 0.15); /* أزرق شفاف */
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.deposit-color {
+  background-color: rgba(16, 185, 129, 0.15); /* أخضر شفاف */
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.earnings-color {
+  background-color: rgba(245, 158, 11, 0.15); /* برتقالي شفاف */
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* تنسيق عمود بيانات الاتصال بالجدول */
+.user-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-contact-info span {
+  font-size: 14px;
+  color: #fff;
+}
+
+.user-contact-info small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* تنسيق أزرار التعديل السريع ومجموعتها */
+.admin-actions-group {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* تلوين كل زر بناءً على تخصصه لتسهيل الاستخدام */
+.btn-bal {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.4);
+}
+
+.btn-bal:hover {
+  background: #0ea5e9;
+  color: #fff;
+}
+
+.btn-dep {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.btn-dep:hover {
+  background: #10b981;
+  color: #fff;
+}
+
+.btn-earn {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.btn-earn:hover {
+  background: #f59e0b;
+  color: #fff;
+}
+
+.admin-loading {
+  color: #fff;
+  padding: 40px 0;
+  text-align: center;
+  font-size: 16px;
+}
+
+/* التحكم بمرونة الشاشات والاستجابة للهواتف والتابلت */
+@media (max-width: 1024px) {
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* يظهر كرتين بكل صف في أجهزة التابلت */
+  }
+}
+
+@media (max-width: 760px) {
+  .admin-dashboard-page {
+    padding: 16px 10px 40px;
+  }
+
+  .admin-stats-grid {
+    grid-template-columns: 1fr; /* عمود واحد فقط على الهواتف */
+  }
+
+  .admin-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .admin-actions-group {
+    flex-direction: column; /* ترتب الأزرار عمودياً في شاشات الجوال الضيقة لمنع التداخل */
+    gap: 6px;
+  }
+
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+
+
+
+
+/* زر التفاصيل الجديد في الجدول */
+.details-trigger-btn {
+  background: transparent;
+  color: #00ffcc;
+  border: 1px solid #00ffccaa;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.details-trigger-btn:hover {
+  background: #00ffcc1f;
+  border-color: #00ffcc;
+  box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+}
+
+/* خلفية المودال المعتمة بالكامل */
+.admin-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(4, 8, 15, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* كارت المودال */
+.admin-modal-card {
+  background: #0f1117;
+  border: 1px solid #243043;
+  width: 100%;
+  max-width: 850px;
+  max-height: 90vh;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { transform: translateY(15px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ترويسة المودال */
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #1f2937;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #fff;
+}
+
+.close-modal-btn {
+  background: transparent;
+  border: none;
+  color: #a9b5c8;
+  font-size: 28px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-modal-btn:hover {
+  color: #ff3366;
+}
+
+/* سكرول المودال لضمان العرض المريح على الشاشات الصغيرة */
+.modal-body-scroll {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: right;
+}
+
+/* صناديق الأقسام داخل المودال */
+.modal-section-box {
+  background: #161a23;
+  border: 1px solid #243043;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.modal-section-box h3 {
+  margin: 0 0 16px;
+  color: #00ffcc;
+  font-size: 16px;
+  border-bottom: 1px solid #243043;
+  padding-bottom: 8px;
+}
+
+/* ترتيب البيانات المضمّنة بالقسم الأول */
+.info-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.info-inline-grid p {
+  margin: 0;
+  color: #fff;
+  font-size: 14px;
+}
+
+.info-inline-grid strong {
+  color: #a9b5c8;
+  margin-left: 6px;
+}
+
+/* رابط الإجراء الفرعي */
+.modal-action-link {
+  background: none;
+  border: none;
+  color: #00ffcc;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 14px;
+  padding: 0;
+  font-size: 13px;
+  text-decoration: underline;
+}
+
+/* أزرار التحكم بالقيم المالية */
+.modal-control-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.modal-control-buttons button {
+  flex: 1;
+  min-width: 200px;
+  background: #1f2937;
+  color: #fff;
+  border: 1px solid #374151;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.modal-control-buttons button:hover {
+  background: #2563eb;
+  border-color: #3b82f6;
+}
+
+/* صف أزرار العمليات اليدوية */
+.manual-ops-row {
+  margin-top: 4px;
+}
+
+.btn-manual-deposit {
+  background: rgba(0, 255, 204, 0.1) !important;
+  border-color: rgba(0, 255, 204, 0.4) !important;
+  color: #00ffcc !important;
+}
+.btn-manual-deposit:hover {
+  background: rgba(0, 255, 204, 0.25) !important;
+  border-color: #00ffcc !important;
+}
+
+.btn-manual-reward {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  color: #fbbf24 !important;
+}
+.btn-manual-reward:hover {
+  background: rgba(245, 158, 11, 0.25) !important;
+  border-color: #f59e0b !important;
+}
+
+.btn-manual-withdraw {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #f87171 !important;
+}
+.btn-manual-withdraw:hover {
+  background: rgba(239, 68, 68, 0.25) !important;
+  border-color: #ef4444 !important;
+}
+
+/* الهستوري المالي المقسم لعمودين */
+.history-tab-split {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.history-column h4 {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.no-data-text {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* قائمة الهستوري وعناصرها المحدثة */
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #0f1117;
+  border: 1px solid #1f2937;
+  font-size: 13px;
+}
+
+.history-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.history-action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 4px;
+  border-top: 1px dashed #1f2937;
+  padding-top: 8px;
+}
+
+.history-amount {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.history-date {
+  color: #6b7280;
+}
+
+.change-status-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s ease;
+}
+
+.change-status-btn:hover {
+  background: #00ffcc;
+  color: #000;
+  border-color: #00ffcc;
+}
+
+/* حالات ألوان الحالات التاريخية */
+.history-item.status-approved .history-amount { color: #10b981; }
+.status-text-approved { color: #10b981; font-weight: bold; }
+
+.history-item.status-reviewing .history-amount { color: #3b82f6; }
+.status-text-reviewing { color: #3b82f6; font-weight: bold; }
+
+.history-item.status-pending .history-amount { color: #fbbf24; }
+.status-text-pending { color: #fbbf24; font-weight: bold; }
+
+.history-item.status-failed .history-amount { color: #ef4444; }
+.status-text-failed { color: #ef4444; font-weight: bold; }
+
+@media (max-width: 768px) {
+  .history-tab-split {
+    grid-template-columns: 1fr; /* عرض عمود واحد للموبايل لتجنب الضيق */
+  }
+  .info-inline-grid {
+    grid-template-columns: 1fr;
+  }
+}

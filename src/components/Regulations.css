@@ -1,0 +1,130 @@
+/* شبكة الهيئات المنظمة (14 هيئة) */
+.regulation-section { 
+  max-width: 1200px; 
+  width: 100%; 
+  margin: 0 auto 60px; 
+  padding: 0 20px; 
+}
+
+.regulation-title { 
+  font-size: 26px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+  text-align: center; 
+  margin-bottom: 35px; 
+}
+
+.regulation-container { 
+  display: grid; 
+  grid-template-columns: repeat(7, 1fr); 
+  gap: 15px; 
+}
+
+.reg-item { 
+  text-align: center; 
+  padding: 15px 10px; 
+  border-radius: 16px; 
+  
+  /* [تعديل] خلفية بيضاء غنية بتأثير زجاجي بلور (Frosted Glass) */
+  background: rgba(255, 255, 255, 0.85); /* رفع نسبة الأبيض لـ 85% لتظهر الخلفية بيضاء بوضوح ونقاء */
+  border: 1px solid rgba(255, 255, 255, 0.6); /* إطار أبيض ناعم متناسق */
+  backdrop-filter: blur(12px); /* تأثير الغبش الزجاجي المميز */
+  -webkit-backdrop-filter: blur(12px); 
+  
+  position: relative;
+  overflow: hidden; 
+  
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  min-height: 140px; 
+}
+
+/* تأثير الـ Hover للفقاعة البيضاء المضيئة */
+.reg-item:hover { 
+  background: rgba(255, 255, 255, 1); /* تتحول لأبيض مصمت بالكامل عند تمرير الماوس للتفاعل */
+  border-color: rgba(28, 100, 242, 0.8); /* الحفاظ على الإطار الأزرق المضيء والواضح */
+  transform: translateY(-6px) scale(1.02); 
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1), 
+              inset 0 0 15px rgba(255, 255, 255, 0.5); 
+}
+
+/* تأثير اللاير الشفافة اللامعة الخاطفة */
+.reg-item::after {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -100%; 
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(
+    90deg, 
+    rgba(255,255,255,0) 0%, 
+    rgba(255,255,255,0.4) 50%, 
+    rgba(255,255,255,0) 100%
+  ); 
+  transform: skewX(-25deg); 
+  transition: all 0.7s ease-in-out; 
+  pointer-events: none; 
+}
+
+.reg-item:hover::after {
+  left: 160%; 
+}
+
+.reg-icon { 
+  max-height: 40px; 
+  max-width: 85%; 
+  width: auto; 
+  object-fit: contain; 
+  margin-bottom: 12px; 
+  position: relative;
+  z-index: 1; 
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); 
+}
+
+.reg-label { 
+  color: #1c64f2; /* الحفاظ على اللون الأزرق الصريح والقوي ليتناسق تماماً مع الخلفية البيضاء */
+  font-size: 12px; 
+  font-weight: 700; /* خط عريض وواضح جداً للقراءة */
+  line-height: 1.4; 
+  word-wrap: break-word; 
+  max-width: 100%; 
+  position: relative;
+  z-index: 1; 
+}
+
+/* ==================== تنسيق شاشات التابلت والشاشات المتوسطة ==================== */
+@media (max-width: 1024px) {
+  .regulation-container { 
+    grid-template-columns: repeat(4, 1fr); 
+  }
+}
+
+/* ==================== تنسيق شاشات Mobile ==================== */
+@media (max-width: 768px) {
+  .regulation-title { 
+    font-size: 20px; 
+    margin-bottom: 25px; 
+  }
+  
+  .regulation-container { 
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); 
+    gap: 10px; 
+  }
+  
+  .reg-item { 
+    min-height: 130px; 
+    padding: 12px 6px; 
+  }
+  
+  .reg-icon { 
+    max-height: 35px; 
+  }
+  
+  .reg-label { 
+    font-size: 11px; 
+  }
+}

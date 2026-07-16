@@ -1,0 +1,210 @@
+.phone-verify-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 70px);
+  background-color: #05070a;
+  padding: 40px 20px;
+  box-sizing: border-box;
+  direction: rtl;
+}
+
+.phone-verify-card {
+  background-color: #151a26;
+  border: 1px solid #323f5a;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 440px;
+  padding: 45px 35px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* لقطة فنية: أنيميشن النبض حول الدرع لجذب الانتباه وزيادة الموثوقية */
+.shield-icon-wrapper {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  background: rgba(243, 186, 47, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 25px auto;
+}
+
+.shield-icon-wrapper i {
+  color: #f3ba2f;
+  font-size: 32px;
+  z-index: 2;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 2px solid rgba(243, 186, 47, 0.3);
+  border-radius: 50%;
+  animation: pulse-animation 2s infinite ease-out;
+  z-index: 1;
+}
+
+@keyframes pulse-animation {
+  0% { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+.verify-header h2 {
+  color: #ffffff;
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 12px 0;
+}
+
+.verify-header p {
+  color: #9aa4b2;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 30px 0;
+}
+
+.gift-text {
+  color: #f3ba2f;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(243, 186, 47, 0.2);
+}
+
+.verify-form {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.phone-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: right;
+}
+
+.phone-input-group label {
+  color: #f1f3f5;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* دمج الإدخال مع كود الدولة في سطر واحد فخم */
+.phone-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: #0b0e14;
+  border: 1px solid #3a4b6e;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.phone-input-wrapper:focus-within {
+  border-color: #f3ba2f;
+  box-shadow: 0 0 0 3px rgba(243, 186, 47, 0.25);
+}
+
+.phone-input-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 14px 44px 14px 14px;
+  color: #ffffff;
+  font-size: 16px;
+  outline: none;
+  letter-spacing: 1px;
+}
+
+/* تنسيق قائمة الدول */
+.country-select {
+  background-color: #151a26;
+  color: #ffffff;
+  border: none;
+  border-right: 1px solid #3a4b6e;
+  padding: 0 12px;
+  height: 100%;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  border-top-left-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+
+.phone-icon {
+  position: absolute;
+  right: 16px;
+  color: #718096;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.phone-input-wrapper:focus-within .phone-icon {
+  color: #f3ba2f;
+}
+
+/* زر التفعيل الفخم */
+.btn-verify-submit {
+  background-color: #f3ba2f;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  padding: 15px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-verify-submit:hover {
+  background-color: #dba426;
+  transform: translateY(-1px);
+}
+
+.verify-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 30px;
+  color: #5d6b82;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.verify-footer i {
+  font-size: 14px;
+  color: #02c076; /* علامة خضراء للأمان */
+}
+
+/* 📱 الموبايل */
+@media (max-width: 480px) {
+  .phone-verify-card {
+    padding: 35px 20px;
+  }
+  
+  .verify-header h2 {
+    font-size: 21px;
+  }
+  
+  .phone-input-wrapper input {
+    font-size: 15px;
+    padding: 12px 38px 12px 10px;
+  }
+  
+  .country-select {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+}
