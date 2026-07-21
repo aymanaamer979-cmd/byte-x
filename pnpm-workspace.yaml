@@ -1,9 +1,0 @@
-<<<<<<< HEAD
-allowBuilds:
-  '@firebase/util': true
-  protobufjs: true
-=======
-allowBuilds:
-  '@firebase/util': true
-  protobufjs: true
->>>>>>> 53f08c94e74e84fc7a52fa26ff5f51acded6f1b0
