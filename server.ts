@@ -3,7 +3,6 @@ import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import mongoose from 'mongoose';
 import cors from 'cors';
-import { createServer as createViteServer } from 'vite';
 
 // --- MONGODB LAZY CONNECTION HANDLER ---
 let MONGODB_URI = process.env.MONGODB_URI;
@@ -580,7 +579,8 @@ connectToDatabase().catch(err => {
 
   if (process.env.NODE_ENV !== "production") {
     (async () => {
-      const vite = await createViteServer({
+      const { createServer } = await import('vite');
+      const vite = await createServer({
         server: { middlewareMode: true },
         appType: "spa",
       });
