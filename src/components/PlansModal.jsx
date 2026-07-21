@@ -22,8 +22,8 @@ function PlansModal({ isOpen, onClose }) {
             <div className="plan-profit">حتى 150% ربح</div>
             <ul className="plan-details">
               <li><i className="fa-solid fa-check"></i> الحد الأدنى للإيداع: $100</li>
-              <li><i class="fa-solid fa-check"></i> سحب أرباح أسبوعي</li>
-              <li><i class="fa-solid fa-check"></i> دعم فني مالي 24/5</li>
+              <li><i className="fa-solid fa-check"></i> سحب أرباح أسبوعي</li>
+              <li><i className="fa-solid fa-check"></i> دعم فني مالي 24/5</li>
             </ul>
             <button className="btn-plan-select" onClick={() => alert('جاري الانتقال لفتح حساب على الخطة الأساسية...')}>ابدأ الآن</button>
           </div>
@@ -34,8 +34,8 @@ function PlansModal({ isOpen, onClose }) {
             <div className="plan-profit">حتى 800% ربح</div>
             <ul className="plan-details">
               <li><i className="fa-solid fa-star" style={{ color: '#f3ba2f' }}></i> الحد الأدنى للإيداع: $1,000</li>
-              <li><i class="fa-solid fa-check"></i> سحب أرباح يومي فوري</li>
-              <li><i class="fa-solid fa-check"></i> مدير حسابات خاص متاح 24/7</li>
+              <li><i className="fa-solid fa-check"></i> سحب أرباح يومي فوري</li>
+              <li><i className="fa-solid fa-check"></i> مدير حسابات خاص متاح 24/7</li>
             </ul>
             <button className="btn-plan-select" onClick={() => alert('جاري الانتقال لفتح حساب على خطة النمو المتقدمة...')}>الأكثر طلباً</button>
           </div>
@@ -46,8 +46,8 @@ function PlansModal({ isOpen, onClose }) {
             <div className="plan-profit">حتى 3000% ربح</div>
             <ul className="plan-details">
               <li><i className="fa-solid fa-check"></i> الحد الأدنى للإيداع: $10,000</li>
-              <li><i class="fa-solid fa-check"></i> عوائد مركبة يومية قصوى</li>
-              <li><i class="fa-solid fa-check"></i> تغطية تأمينية شاملة للمخاطر</li>
+              <li><i className="fa-solid fa-check"></i> عوائد مركبة يومية قصوى</li>
+              <li><i className="fa-solid fa-check"></i> تغطية تأمينية شاملة للمخاطر</li>
             </ul>
             <button className="btn-plan-select" onClick={() => alert('جاري الانتقال لفتح حساب على خطة VIP...')}>تواصل مع الإدارة</button>
           </div>

@@ -26,9 +26,9 @@ function About({ setIsLicenseOpen, setIsProtectionOpen, setIsPlansOpen }) {
         </div>
         
         <div className="about-features">
-          <div className="feat-box"><i class="fa-solid fa-microchip"></i><span>برمجيات ذكاء اصطناعي</span></div>
-          <div className="feat-box"><i class="fa-solid fa-chart-line"></i><span>أصول مالية متعددة</span></div>
-          <div className="feat-box"><i class="fa-solid fa-building-columns"></i><span>مدرجة ببورصة لندن</span></div>
+          <div className="feat-box"><i className="fa-solid fa-microchip"></i><span>برمجيات ذكاء اصطناعي</span></div>
+          <div className="feat-box"><i className="fa-solid fa-chart-line"></i><span>أصول مالية متعددة</span></div>
+          <div className="feat-box"><i className="fa-solid fa-building-columns"></i><span>مدرجة ببورصة لندن</span></div>
         </div>
       </div>
     </section>

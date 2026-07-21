@@ -3,12 +3,16 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx"; // تأكد أن مسار الـ Context عندك صحيح
 
 const AdminRoute = ({ children }) => {
-  const { currentUser, userDataLoading } = useAuth();
+  const { currentUser, userData, userDataLoading } = useAuth();
   const [isAdmin, setIsAdmin] = useState(null); // null يعني جاري الفحص
 
   useEffect(() => {
     const checkAdminClaim = async () => {
       if (currentUser) {
+        if (userData?.role === 'admin') {
+          setIsAdmin(true);
+          return;
+        }
         try {
           // فحص الختم الخفي (Custom Claim) من التوكن
           const idTokenResult = await currentUser.getIdTokenResult();
@@ -23,7 +27,7 @@ const AdminRoute = ({ children }) => {
     };
 
     checkAdminClaim();
-  }, [currentUser]);
+  }, [currentUser, userData]);
 
   // أثناء التحقق، اعرض مؤشر تحميل بسيط لمنع الوميض
   if (userDataLoading || isAdmin === null) {
@@ -35,7 +39,7 @@ const AdminRoute = ({ children }) => {
   }
 
   // لو أدمن هيدخل، لو مش أدمن هيطرد لصفحة تسجيل الدخول
-  return currentUser && isAdmin ? children : <Navigate to="/login" replace />;
+  return currentUser && (isAdmin || userData?.role === 'admin') ? children : <Navigate to="/login" replace />;
 };
 
 export default AdminRoute;

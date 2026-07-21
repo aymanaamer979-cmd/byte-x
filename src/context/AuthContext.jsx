@@ -46,6 +46,14 @@ export const AuthProvider = ({ children }) => {
       };
       await setDoc(userDocRef, basicProfile);
 
+      const rewardsRef = collection(db, 'users', user.uid, 'rewards');
+      await addDoc(rewardsRef, {
+        amount: 35,
+        status: 'completed',
+        description: 'هدية ترحيبية عند التسجيل',
+        createdAt: new Date().toISOString(),
+      });
+
       const transactionsRef = collection(db, 'users', user.uid, 'transactions');
       await addDoc(transactionsRef, {
         amount: 35,
@@ -127,6 +135,53 @@ export const AuthProvider = ({ children }) => {
 
     return () => unsubscribe();
   }, []);
+
+  // تتبع حالة الاتصال بالإنترنت (Online Presence) في الوقت الفعلي
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const updatePresence = async (status) => {
+      try {
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        await updateDoc(userDocRef, {
+          lastSeen: new Date().toISOString(),
+          isOnline: status
+        });
+      } catch {
+        // قد يفشل إذا كان المستخدم يسجل الخروج
+      }
+    };
+
+    // تحديث فوري للحالة كنشط
+    updatePresence(true);
+
+    // تحديث دوري كل 20 ثانية لتأكيد النشاط
+    const interval = setInterval(() => {
+      updatePresence(true);
+    }, 20000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updatePresence(true);
+      } else {
+        updatePresence(false);
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      updatePresence(false);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      updatePresence(false);
+    };
+  }, [currentUser]);
 
   return (
     <AuthContext.Provider

@@ -57,14 +57,15 @@ function Withdraw() {
     try {
       const userDocRef = doc(db, 'users', currentUser.uid);
 
-      // 1. خصم المبلغ مؤقتاً من رصيد المستخدم المتاح في مستنده الرئيسي
+      // 1. خصم المبلغ مؤقتاً من رصيد المستخدم المتاح في مستنده الرئيسي ويشير لوجود سحب معلق
       await updateDoc(userDocRef, {
         balance: balance - withdrawAmount,
+        hasPendingWithdrawal: true,
         updatedAt: new Date().toISOString()
       });
 
-      // 2. تسجيل الطلب في الكولكشن العام للسحوبات ليقوم الأدمن بمراجعته
-      await addDoc(collection(db, 'withdrawals'), {
+      // 2. تسجيل الطلب في الكولكشن الفرعي للسحوبات تحت حساب العميل ليقوم الأدمن بمراجعته
+      await addDoc(collection(db, 'users', currentUser.uid, 'withdrawals'), {
         userId: currentUser.uid,
         userEmail: currentUser.email,
         amount: withdrawAmount,

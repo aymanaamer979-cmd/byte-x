@@ -296,7 +296,7 @@
   background: #0f1117;
   border: 1px solid #243043;
   width: 100%;
-  max-width: 850px;
+  max-width: 1100px;
   max-height: 90vh;
   border-radius: 20px;
   display: flex;
@@ -447,6 +447,16 @@
   border-color: #f59e0b !important;
 }
 
+.btn-manual-profit {
+  background: rgba(0, 207, 194, 0.1) !important;
+  border-color: rgba(0, 207, 194, 0.4) !important;
+  color: #00cfc2 !important;
+}
+.btn-manual-profit:hover {
+  background: rgba(0, 207, 194, 0.25) !important;
+  border-color: #00cfc2 !important;
+}
+
 .btn-manual-withdraw {
   background: rgba(239, 68, 68, 0.1) !important;
   border-color: rgba(239, 68, 68, 0.4) !important;
@@ -457,11 +467,11 @@
   border-color: #ef4444 !important;
 }
 
-/* الهستوري المالي المقسم لعمودين */
+/* الهستوري المالي المقسم لأربعة أعمدة */
 .history-tab-split {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
 }
 
 .history-column h4 {
@@ -554,11 +564,22 @@
 .history-item.status-failed .history-amount { color: #ef4444; }
 .status-text-failed { color: #ef4444; font-weight: bold; }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .history-tab-split {
-    grid-template-columns: 1fr; /* عرض عمود واحد للموبايل لتجنب الضيق */
+    grid-template-columns: 1fr; /* عرض عمود واحد للموبايل والتابلت لتجنب الضيق */
   }
   .info-inline-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* تنبيه الرسائل غير المقروءة في جدول الإدارة */
+@keyframes pulseUnread {
+  0% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); opacity: 0.9; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.pulse-unread-badge {
+  animation: pulseUnread 1.8s infinite ease-in-out;
 }

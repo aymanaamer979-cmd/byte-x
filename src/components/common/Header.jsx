@@ -29,10 +29,12 @@ function Header({ platformName, setIsPlansOpen }) {
       
       <ul className="nav-links">
         {currentUser ? (
-          /* 🟢 في حالة تسجيل الدخول: يظهر خيار ابدأ الاستثمار فقط */
-          <li className="nav-item">
-            <button onClick={() => setIsPlansOpen(true)} className="nav-btn-link">ابدأ استثمار الآن</button>
-          </li> 
+          /* 🟢 في حالة تسجيل الدخول: يظهر خيار ابدأ الاستثمار فقط للمستخدم العادي */
+          userData?.role !== 'admin' && (
+            <li className="nav-item">
+              <button onClick={() => setIsPlansOpen(true)} className="nav-btn-link">ابدأ استثمار الآن</button>
+            </li>
+          )
         ) : (
           /* 🔴 في حالة عدم تسجيل الدخول: تظهر الروابط العادية */
           <>
@@ -102,39 +104,39 @@ function Header({ platformName, setIsPlansOpen }) {
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)'
               }}
             >
-              <Link 
-                to="/account" 
-                onClick={() => setShowDropdown(false)}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '10px', 
-                  color: '#ffffff', 
-                  padding: '10px 16px', 
-                  textDecoration: 'none',
-                  fontSize: '14px' 
-                }}
-              >
-                <i className="fa-solid fa-user-gear" style={{ color: '#00ffcc' }}></i>
-                <span>حسابي الشخصي</span>
-              </Link>
-
-              {userData?.role === 'admin' && (
-                <Link
-                  to="/admin"
+              {userData?.role === 'admin' ? (
+                <Link 
+                  to="/admin" 
                   onClick={() => setShowDropdown(false)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    color: '#ffffff',
-                    padding: '10px 16px',
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '10px', 
+                    color: '#ffffff', 
+                    padding: '10px 16px', 
                     textDecoration: 'none',
-                    fontSize: '14px'
+                    fontSize: '14px' 
                   }}
                 >
                   <i className="fa-solid fa-shield-halved" style={{ color: '#ffd166' }}></i>
-                  <span>لوحة الإدارة</span>
+                  <span>لوحة التحكم</span>
+                </Link>
+              ) : (
+                <Link 
+                  to="/account" 
+                  onClick={() => setShowDropdown(false)}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '10px', 
+                    color: '#ffffff', 
+                    padding: '10px 16px', 
+                    textDecoration: 'none',
+                    fontSize: '14px' 
+                  }}
+                >
+                  <i className="fa-solid fa-user-gear" style={{ color: '#00ffcc' }}></i>
+                  <span>حسابي الشخصي</span>
                 </Link>
               )}
               

@@ -3,18 +3,22 @@ import { Outlet } from 'react-router-dom';
 import Header from '../components/common/Header'; // اضبط المسار حسب مكان ملفك الجديد
 import Footer from '../components/common/Footer';
 import ChatWidget from '../components/common/ChatWidget';
+import AdminChatWidget from '../components/admin/AdminChatWidget';
 import LicenseModal from '../components/LicenseModal';
 import ProtectionModal from '../components/ProtectionModal';
 import PlansModal from '../components/PlansModal';
+import { useAuth } from '../context/AuthContext';
 
 const MainLayout = () => {
-  const [isLoggedIn] = useState(false);
+  const { userData } = useAuth();
   const platformName = 'More';
 
   // الحالات الثابتة للكروت
   const [isPlansOpen, setIsPlansOpen] = useState(false);
   const [isLicenseOpen, setIsLicenseOpen] = useState(false);
   const [isProtectionOpen, setIsProtectionOpen] = useState(false);
+
+  const isLoggedIn = !!userData;
 
   return (
     <div dir="rtl" className="app-container">
@@ -41,7 +45,7 @@ const MainLayout = () => {
       <LicenseModal isOpen={isLicenseOpen} onClose={() => setIsLicenseOpen(false)} />
       <ProtectionModal isOpen={isProtectionOpen} onClose={() => setIsProtectionOpen(false)} />
       
-      <ChatWidget />
+      {userData?.role === 'admin' ? <AdminChatWidget /> : <ChatWidget />}
     </div>
   );
 };

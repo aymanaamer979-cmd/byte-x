@@ -10,6 +10,7 @@ import AdminDashboard from './pages/private/AdminDashboard';
 import Deposit from './pages/private/Deposit';
 import Withdraw from './pages/private/Withdraw';
 import Settings from './pages/private/Settings';
+import AdminUserFinancials from './pages/private/AdminUserFinancials';
 
 // استيراد حارس الأدمن الخاص بك من مجلد المكونات
 import AdminRoute from './components/AdminRoute'; 
@@ -26,6 +27,11 @@ const PublicRoute = ({ children }) => {
   useEffect(() => {
     const checkClaims = async () => {
       if (currentUser) {
+        if (userData?.role === 'admin') {
+          setIsAdmin(true);
+          setCheckingAdmin(false);
+          return;
+        }
         try {
           const idTokenResult = await currentUser.getIdTokenResult();
           setIsAdmin(!!idTokenResult.claims.admin);
@@ -38,17 +44,17 @@ const PublicRoute = ({ children }) => {
     };
 
     checkClaims();
-  }, [currentUser]);
+  }, [currentUser, userData]);
 
   if (currentUser && (userDataLoading || checkingAdmin)) return null;
 
   if (currentUser) {
-    if (!userData?.phone) {
-      return <Navigate to="/phone-verification" replace />;
+    if (isAdmin || userData?.role === 'admin') {
+      return <Navigate to="/admin" replace />;
     }
 
-    if (isAdmin) {
-      return <Navigate to="/admin" replace />;
+    if (!userData?.phone) {
+      return <Navigate to="/phone-verification" replace />;
     }
 
     return <Navigate to="/account" replace />;
@@ -69,6 +75,10 @@ const RequireAuth = ({ children }) => {
 
   if (userDataLoading) return null;
 
+  if (userData?.role === 'admin') {
+    return children;
+  }
+
   if (!userData?.phone) {
     return <Navigate to="/phone-verification" replace />;
   }
@@ -87,6 +97,21 @@ const RequirePhoneNotVerified = ({ children }) => {
   if (userData?.phone) {
     return <Navigate to="/account" replace />;
   }
+
+  return children;
+};
+
+// ==========================================
+// 3.5 مكوّن للتأكد من تسجيل الدخول فقط (يتجنب الفحص الدائري للهاتف)
+// ==========================================
+const RequireLoginOnly = ({ children }) => {
+  const { currentUser, userDataLoading } = useAuth();
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (userDataLoading) return null;
 
   return children;
 };
@@ -113,11 +138,11 @@ function App() {
           <Route
             path="phone-verification"
             element={
-              <RequireAuth>
+              <RequireLoginOnly>
                 <RequirePhoneNotVerified>
                   <PhoneVerification />
                 </RequirePhoneNotVerified>
-              </RequireAuth>
+              </RequireLoginOnly>
             }
           />
 
@@ -169,6 +194,16 @@ function App() {
 
           <Route path="dashboard" element={<Navigate to="/account" replace />} />
         </Route>
+
+        {/* مسار الملف المالي الموحد المستقل تماماً عن الـ Layout العام */}
+        <Route
+          path="admin/user-financials/:userId"
+          element={
+            <AdminRoute>
+              <AdminUserFinancials />
+            </AdminRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -14,6 +14,36 @@ function Account() {
   const [transactions, setTransactions] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // دالة لتنسيق التاريخ والوقت باللغة العربية (سنة، شهر، يوم، ساعة، دقيقة)
+  const formatDateTime = (createdAt) => {
+    if (!createdAt) return 'مؤخراً';
+    try {
+      let date;
+      if (createdAt && typeof createdAt === 'object' && createdAt.seconds) {
+        date = new Date(createdAt.seconds * 1000);
+      } else if (typeof createdAt === 'string' || createdAt instanceof Date) {
+        date = new Date(createdAt);
+      } else if (createdAt && typeof createdAt === 'object' && createdAt.toDate) {
+        date = createdAt.toDate();
+      } else {
+        return String(createdAt);
+      }
+      
+      if (isNaN(date.getTime())) return String(createdAt);
+
+      return date.toLocaleString('ar-EG', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch {
+      return String(createdAt);
+    }
+  };
+
   // 1. الاستماع الحي لبيانات الملف الشخصي والمالي المدمج في المستند الرئيسي
   useEffect(() => {
     if (!currentUser) return;
@@ -163,38 +193,51 @@ function Account() {
           ) : (
             <div className="transactions-list">
               {transactions.map((tx) => (
-                <div className="transaction-row" key={tx.id}>
-                  <div className="tx-info-side">
-                    <span className={`tx-icon-badge ${tx.type}`}>
-                      {tx.type === 'deposit' && '📥'}
-                      {tx.type === 'withdraw' && '📤'}
-                      {tx.type === 'reward' && '🎁'}
-                    </span>
-                    <div className="tx-meta">
-                      <span className="tx-type-text">
-                        {tx.type === 'deposit' && 'إيداع رصيد'}
-                        {tx.type === 'withdraw' && 'سحب أرباح'}
-                        {tx.type === 'reward' && 'بونص ترحيبي'} 
+                <div className="transaction-row" key={tx.id} style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="tx-info-side">
+                      <span className={`tx-icon-badge ${tx.type}`}>
+                        {tx.type === 'deposit' && '📥'}
+                        {tx.type === 'withdraw' && '📤'}
+                        {tx.type === 'reward' && '🎁'}
                       </span>
-                      <span className="tx-date">
-                        {tx.createdAt?.seconds 
-                          ? new Date(tx.createdAt.seconds * 1000).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) 
-                          : typeof tx.createdAt === 'string' && tx.createdAt.includes('T')
-                            ? new Date(tx.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })
-                            : tx.createdAt}
+                      <div className="tx-meta">
+                        <span className="tx-type-text">
+                          {tx.type === 'deposit' && 'إيداع رصيد'}
+                          {tx.type === 'withdraw' && 'سحب أرباح'}
+                          {tx.type === 'reward' && 'بونص ترحيبي'} 
+                        </span>
+                        <span className="tx-date">
+                          {formatDateTime(tx.createdAt)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="tx-status-side" style={{ alignItems: 'flex-end' }}>
+                      <span className="tx-amount">
+                        {tx.type === 'withdraw' ? '-' : '+'}${tx.amount}
+                      </span>
+                      <span className={`tx-status ${tx.status}`}>
+                        {tx.status === 'completed' && 'مكتملة'}
+                        {tx.status === 'pending' && 'معلقة'}
+                        {tx.status === 'failed' && 'مرفوضة'}
+                        {tx.status === 'reviewing' && 'تحت المراجعة'}
+                        {tx.status === 'suspended' && 'معلقة'}
                       </span>
                     </div>
                   </div>
-                  <div className="tx-status-side">
-                    <span className="tx-amount">
-                      {tx.type === 'withdraw' ? '-' : '+'}${tx.amount}
-                    </span>
-                    <span className={`tx-status ${tx.status}`}>
-                      {tx.status === 'completed' && 'مكتملة'}
-                      {tx.status === 'pending' && 'معلقة'}
-                      {tx.status === 'failed' && 'مرفوضة'}
-                    </span>
-                  </div>
+                  {tx.description && (
+                    <div className="tx-desc" style={{
+                      color: '#8892b0',
+                      fontSize: '11px',
+                      marginTop: '2px',
+                      borderRight: '2px solid #555c7d',
+                      paddingRight: '8px',
+                      textAlign: 'right',
+                      wordBreak: 'break-word'
+                    }}>
+                      {tx.description}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
