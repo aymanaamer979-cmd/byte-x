@@ -28,7 +28,7 @@ const PhoneVerification = () => {
       navigate('/account', { replace: true });
     } catch (err) {
       console.error('خطأ أثناء حفظ رقم الهاتف:', err.message);
-      setError('حدث خطأ أثناء تفعيل الحساب، يرجى المحاولة مرة أخرى.');
+      setError(`خطأ أثناء تفعيل الحساب: ${err.message}`);
     } finally {
       setLoading(false);
     }

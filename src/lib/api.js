@@ -8,8 +8,23 @@ const BASE_URL = '/api';
 
 async function handleResponse(response) {
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.error || 'API Request Failed');
+    let errorMsg = 'API Request Failed';
+    try {
+      const errorData = await response.json();
+      errorMsg = errorData.message || errorData.error || errorMsg;
+    } catch (e) {
+      try {
+        const text = await response.text();
+        if (text && text.length < 150) {
+          errorMsg = `Server Error: ${text}`;
+        } else {
+          errorMsg = `Server Error (${response.status})`;
+        }
+      } catch (textErr) {
+        errorMsg = `Server Error (${response.status})`;
+      }
+    }
+    throw new Error(errorMsg);
   }
   return response.json();
 }
