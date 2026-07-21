@@ -35,15 +35,18 @@ if (MONGODB_URI && MONGODB_URI.includes('://')) {
 }
 
 let dbConnected = false;
+let lastDbError: any = null;
 
 async function connectToDatabase() {
   if (mongoose.connection.readyState === 1) {
     dbConnected = true;
+    lastDbError = null;
     return true;
   }
   
   if (!MONGODB_URI) {
     console.warn("⚠️ Warning: MONGODB_URI environment variable is not set. Database features will return configuration errors.");
+    lastDbError = new Error("MONGODB_URI environment variable is missing or empty.");
     return false;
   }
   try {
@@ -52,11 +55,13 @@ async function connectToDatabase() {
       serverSelectionTimeoutMS: 5000,
     });
     dbConnected = true;
+    lastDbError = null;
     console.log("🔌 Connected to MongoDB Atlas successfully.");
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ Failed to connect to MongoDB Atlas:", error);
     dbConnected = false;
+    lastDbError = error;
     return false;
   }
 }
@@ -65,9 +70,10 @@ async function connectToDatabase() {
 const ensureDb = async (req: Request, res: Response, next: NextFunction) => {
   const connected = await connectToDatabase();
   if (!connected) {
+    const errMsg = lastDbError ? (lastDbError.message || String(lastDbError)) : "Unknown Connection Error";
     res.status(500).json({
       error: "Database Configuration Error",
-      message: "Please configure MONGODB_URI in your environment settings/secrets to enable this feature."
+      message: `Failed to connect to MongoDB: ${errMsg}. Please verify your MONGODB_URI connection string and ensure that your MongoDB Atlas cluster has "Network Access" set to allow access from anywhere (0.0.0.0/0) so that Vercel serverless functions can connect.`
     });
     return;
   }
@@ -122,6 +128,17 @@ const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
+
+app.get('/api/db-status', async (req: Request, res: Response) => {
+  const connected = await connectToDatabase();
+  res.json({
+    connected,
+    readyState: mongoose.connection.readyState,
+    hasUri: !!MONGODB_URI,
+    error: lastDbError ? (lastDbError.message || String(lastDbError)) : null,
+    tip: "If you are getting a connection timeout or server selection timeout, please make sure you configured 'Network Access' (IP Access List) in MongoDB Atlas to 'Allow Access From Anywhere' (0.0.0.0/0). Vercel uses dynamic serverless IP addresses which change continuously."
+  });
+});
 
 // Try to connect to MongoDB on startup, but do not block the server if it fails or is missing
 connectToDatabase().catch(err => {
