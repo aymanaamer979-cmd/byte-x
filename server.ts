@@ -37,18 +37,26 @@ if (MONGODB_URI && MONGODB_URI.includes('://')) {
 let dbConnected = false;
 
 async function connectToDatabase() {
-  if (dbConnected) return true;
+  if (mongoose.connection.readyState === 1) {
+    dbConnected = true;
+    return true;
+  }
+  
   if (!MONGODB_URI) {
     console.warn("⚠️ Warning: MONGODB_URI environment variable is not set. Database features will return configuration errors.");
     return false;
   }
   try {
-    await mongoose.connect(MONGODB_URI);
+    // serverSelectionTimeoutMS prevents serverless functions from hanging and timing out on Vercel
+    await mongoose.connect(MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     dbConnected = true;
     console.log("🔌 Connected to MongoDB Atlas successfully.");
     return true;
   } catch (error) {
     console.error("❌ Failed to connect to MongoDB Atlas:", error);
+    dbConnected = false;
     return false;
   }
 }
@@ -109,17 +117,16 @@ const Transaction = mongoose.model('Transaction', TransactionSchema);
 const ChatMessage = mongoose.model('ChatMessage', ChatMessageSchema);
 
 // --- EXPRESS APPLICATION SETUP ---
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+const app = express();
+const PORT = 3000;
 
-  app.use(cors());
-  app.use(express.json());
+app.use(cors());
+app.use(express.json());
 
-  // Try to connect to MongoDB on startup, but do not block the server if it fails or is missing
-  connectToDatabase().catch(err => {
-    console.error("Non-blocking startup DB connection error:", err);
-  });
+// Try to connect to MongoDB on startup, but do not block the server if it fails or is missing
+connectToDatabase().catch(err => {
+  console.error("Non-blocking startup DB connection error:", err);
+});
 
   // ==========================================================
   // --- USER API ENDPOINTS ---
@@ -555,22 +562,28 @@ async function startServer() {
   // ==========================================================
 
   if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+    (async () => {
+      const vite = await createViteServer({
+        server: { middlewareMode: true },
+        appType: "spa",
+      });
+      app.use(vite.middlewares);
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`🚀 Byte X Platform running on http://localhost:${PORT} with MongoDB Atlas integration.`);
+      });
+    })();
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req: Request, res: Response) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
+
+    if (!process.env.VERCEL) {
+      app.listen(PORT, "0.0.0.0", () => {
+        console.log(`🚀 Byte X Platform running on port ${PORT}`);
+      });
+    }
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Byte X Platform running on http://localhost:${PORT} with MongoDB Atlas integration.`);
-  });
-}
-
-startServer();
+export default app;
