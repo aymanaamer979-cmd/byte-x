@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, collection, addDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { auth } from '../config/firebase';
+import { api } from '../lib/api';
 
 const AuthContext = createContext();
 
@@ -25,11 +25,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const fetchUserData = async (user) => {
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    if (!userDocSnap.exists()) {
-      const basicProfile = {
+    try {
+      const data = await api.syncUser({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL
+      });
+      setUserData(data);
+    } catch (error) {
+      console.error('Error fetching user data from MongoDB API:', error);
+      // Fallback local profile structure if API is not fully up yet
+      setUserData({
         uid: user.uid,
         displayName: user.displayName || 'مستثمر جديد',
         email: user.email,
@@ -39,56 +46,7 @@ export const AuthProvider = ({ children }) => {
         balance: 35,
         investments: 0,
         profits: 0,
-        depositBonus: 0,
-        depositBonusDate: '',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      await setDoc(userDocRef, basicProfile);
-
-      const rewardsRef = collection(db, 'users', user.uid, 'rewards');
-      await addDoc(rewardsRef, {
-        amount: 35,
-        status: 'completed',
-        description: 'هدية ترحيبية عند التسجيل',
-        createdAt: new Date().toISOString(),
       });
-
-      const transactionsRef = collection(db, 'users', user.uid, 'transactions');
-      await addDoc(transactionsRef, {
-        amount: 35,
-        type: 'reward',
-        status: 'completed',
-        description: 'هدية ترحيبية عند التسجيل',
-        createdAt: new Date().toISOString(),
-      });
-
-      setUserData(basicProfile);
-    } else {
-      const raw = userDocSnap.data();
-      const basicProfile = {
-        ...raw,
-        displayName: raw.displayName || raw.name || user.displayName || 'مستثمر',
-        balance: raw.balance ?? 35,
-        investments: raw.investments ?? 0,
-        profits: raw.profits ?? 0,
-        depositBonus: raw.depositBonus ?? 0,
-        depositBonusDate: raw.depositBonusDate ?? '',
-      };
-
-      // إذا كانت الحقول غير موجودة بالداتابيز للمستخدم القديم، نقوم بكتابتها لحفظ التجانس
-      if (raw.balance === undefined || raw.investments === undefined || raw.profits === undefined) {
-        await setDoc(userDocRef, {
-          balance: basicProfile.balance,
-          investments: basicProfile.investments,
-          profits: basicProfile.profits,
-          depositBonus: basicProfile.depositBonus,
-          depositBonusDate: basicProfile.depositBonusDate,
-          updatedAt: new Date().toISOString()
-        }, { merge: true });
-      }
-
-      setUserData(basicProfile);
     }
   };
 
@@ -104,14 +62,8 @@ export const AuthProvider = ({ children }) => {
 
   const updatePhone = async (phone) => {
     if (!currentUser) throw new Error('No authenticated user');
-
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    await updateDoc(userDocRef, {
-      phone,
-      updatedAt: new Date().toISOString(),
-    });
-
-    setUserData((prev) => (prev ? { ...prev, phone } : prev));
+    const updatedUser = await api.updatePhone(currentUser.uid, phone);
+    setUserData(updatedUser);
   };
 
   useEffect(() => {
@@ -142,11 +94,7 @@ export const AuthProvider = ({ children }) => {
 
     const updatePresence = async (status) => {
       try {
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        await updateDoc(userDocRef, {
-          lastSeen: new Date().toISOString(),
-          isOnline: status
-        });
+        await api.updatePresence(currentUser.uid, status);
       } catch {
         // قد يفشل إذا كان المستخدم يسجل الخروج
       }
@@ -203,3 +151,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+

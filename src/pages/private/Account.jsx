@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../config/firebase';
-import { doc, collection, onSnapshot } from 'firebase/firestore';
+import { api } from '../../lib/api';
 import './Account.css';
 
 function Account() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
 
-  // حالات جلب البيانات الحية من Firestore (الملف الشخصي، والعمليات)
+  // حالات جلب البيانات الحية من API (الملف الشخصي، والعمليات)
   const [liveProfileData, setLiveProfileData] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -18,17 +17,7 @@ function Account() {
   const formatDateTime = (createdAt) => {
     if (!createdAt) return 'مؤخراً';
     try {
-      let date;
-      if (createdAt && typeof createdAt === 'object' && createdAt.seconds) {
-        date = new Date(createdAt.seconds * 1000);
-      } else if (typeof createdAt === 'string' || createdAt instanceof Date) {
-        date = new Date(createdAt);
-      } else if (createdAt && typeof createdAt === 'object' && createdAt.toDate) {
-        date = createdAt.toDate();
-      } else {
-        return String(createdAt);
-      }
-      
+      let date = new Date(createdAt);
       if (isNaN(date.getTime())) return String(createdAt);
 
       return date.toLocaleString('ar-EG', {
@@ -44,52 +33,42 @@ function Account() {
     }
   };
 
-  // 1. الاستماع الحي لبيانات الملف الشخصي والمالي المدمج في المستند الرئيسي
+  // الاستماع وتحديث البيانات المالية من الـ API بشكل دوري
   useEffect(() => {
     if (!currentUser) return;
 
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    
-    const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setLiveProfileData(docSnap.data());
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        const [profile, txs] = await Promise.all([
+          api.getUserProfile(currentUser.uid),
+          api.getUserTransactions(currentUser.uid)
+        ]);
+
+        if (isMounted) {
+          setLiveProfileData(profile);
+          setTransactions(txs.slice(0, 5));
+          setLoadingData(false);
+        }
+      } catch (error) {
+        console.error("❌ خطأ في جلب البيانات من MongoDB API:", error);
+        if (isMounted && loadingData) {
+          setLoadingData(false);
+        }
       }
-      setLoadingData(false);
-    }, (error) => {
-      console.error("❌ خطأ في جلب بيانات الملف الشخصي والمالي الحية:", error);
-      setLoadingData(false);
-    });
+    };
 
-    return () => unsubscribeProfile();
-  }, [currentUser]);
+    // جلب البيانات فوراً عند فتح المكون
+    fetchData();
 
-  // تم إلغاء المستمع الفرعي لـ financials لقراءة كل شيء من المستند الرئيسي مباشرة
+    // تحديث دوري كل 5 ثوانٍ لضمان حيوية الأرقام
+    const interval = setInterval(fetchData, 5000);
 
-  // 3. الاستماع الحي للعمليات الخاصة باليوزر من الـ Subcollection الفرعي (transactions) وترتيبها
-  useEffect(() => {
-    if (!currentUser) return;
-
-    const txSubcollectionRef = collection(db, 'users', currentUser.uid, 'transactions');
-
-    const unsubscribeTx = onSnapshot(txSubcollectionRef, (querySnapshot) => {
-      const txList = [];
-      querySnapshot.forEach((doc) => {
-        txList.push({ id: doc.id, ...doc.data() });
-      });
-
-      // ترتيب العمليات برمجياً من الأحدث إلى الأقدم
-      txList.sort((a, b) => {
-        const dateA = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime();
-        const dateB = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt).getTime();
-        return dateB - dateA; 
-      });
-
-      setTransactions(txList.slice(0, 5));
-    }, (error) => {
-      console.error("❌ خطأ في جلب سجل العمليات الفرعي الحية:", error);
-    });
-
-    return () => unsubscribeTx();
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [currentUser]);
 
   const handleLogout = async () => {

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../config/firebase';
-import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { api } from '../../lib/api';
 import './Settings.css';
 
 function Settings() {
@@ -19,21 +18,20 @@ function Settings() {
   useEffect(() => {
     if (!currentUser) return;
 
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setDisplayName(data.displayName || data.name || '');
+    const fetchProfile = async () => {
+      try {
+        const data = await api.getUserProfile(currentUser.uid);
+        setDisplayName(data.displayName || '');
         setPhone(data.phone || '');
         setIsVerified(data.isVerified || false);
+      } catch (error) {
+        console.error('خطأ في جلب بيانات الإعدادات:', error);
+      } finally {
+        setFetchingData(false);
       }
-      setFetchingData(false);
-    }, (error) => {
-      console.error('خطأ في جلب بيانات الإعدادات:', error);
-      setFetchingData(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchProfile();
   }, [currentUser]);
 
   const handleSubmit = async (e) => {
@@ -45,13 +43,10 @@ function Settings() {
 
     setLoading(true);
     try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
-      
       // تحديث البيانات في الداتابيز
-      await updateDoc(userDocRef, {
+      await api.updateProfile(currentUser.uid, {
         displayName: displayName.trim(),
-        phone: phone.trim(),
-        updatedAt: new Date().toISOString()
+        phone: phone.trim()
       });
 
       // تنشيط البيانات في الـ Auth Context

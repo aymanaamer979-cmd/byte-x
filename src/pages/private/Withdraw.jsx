@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../config/firebase';
-import { collection, doc, addDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { api } from '../../lib/api';
 import './Withdraw.css';
 
 function Withdraw() {
@@ -16,22 +15,22 @@ function Withdraw() {
   const [balance, setBalance] = useState(0);
   const [loadingBalance, setLoadingBalance] = useState(true);
 
-  // جلب الرصيد المتاح من المستند الرئيسي للمستخدم مباشرة
+  // جلب الرصيد المتاح من API مباشرة
   useEffect(() => {
     if (!currentUser) return;
 
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setBalance(docSnap.data().balance ?? 35);
+    const fetchBalance = async () => {
+      try {
+        const profile = await api.getUserProfile(currentUser.uid);
+        setBalance(profile.balance ?? 35);
+      } catch (error) {
+        console.error('خطأ في جلب الرصيد الحقيقي للسحب:', error);
+      } finally {
+        setLoadingBalance(false);
       }
-      setLoadingBalance(false);
-    }, (error) => {
-      console.error('خطأ في جلب الرصيد الحقيقي للسحب:', error);
-      setLoadingBalance(false);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchBalance();
   }, [currentUser]);
 
   const handleSubmit = async (e) => {
@@ -55,34 +54,8 @@ function Withdraw() {
 
     setLoading(true);
     try {
-      const userDocRef = doc(db, 'users', currentUser.uid);
-
-      // 1. خصم المبلغ مؤقتاً من رصيد المستخدم المتاح في مستنده الرئيسي ويشير لوجود سحب معلق
-      await updateDoc(userDocRef, {
-        balance: balance - withdrawAmount,
-        hasPendingWithdrawal: true,
-        updatedAt: new Date().toISOString()
-      });
-
-      // 2. تسجيل الطلب في الكولكشن الفرعي للسحوبات تحت حساب العميل ليقوم الأدمن بمراجعته
-      await addDoc(collection(db, 'users', currentUser.uid, 'withdrawals'), {
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        amount: withdrawAmount,
-        method: method,
-        address: address.trim(),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      });
-
-      // 3. إضافة المعاملة في جدول المعاملات الفرعي للمستخدم مع تحديد الحالة "معلقة"
-      await addDoc(collection(db, 'users', currentUser.uid, 'transactions'), {
-        amount: withdrawAmount,
-        type: 'withdraw',
-        status: 'pending',
-        description: `طلب سحب عبر ${method} إلى (${address})`,
-        createdAt: new Date().toISOString()
-      });
+      const description = `طلب سحب عبر ${method} إلى (${address.trim()})`;
+      await api.submitWithdraw(currentUser.uid, withdrawAmount, description);
 
       alert('تم إرسال طلب السحب بنجاح وخصم المبلغ من محفظتك المتاحة! سيقوم القسم المالي بمراجعة طلبك وإتمام التحويل خلال ساعات عمل المنصة.');
       navigate('/account');

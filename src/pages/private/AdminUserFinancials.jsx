@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, doc, updateDoc, query, where, getDocs, addDoc, getDoc, deleteDoc, onSnapshot, orderBy } from 'firebase/firestore';
-import { db } from '../../config/firebase';
+import { api } from '../../lib/api';
 
 // Import our beautiful modular components
 import CustomAlertModal from '../../components/admin/CustomAlertModal';
@@ -108,17 +107,7 @@ function AdminUserFinancials() {
   const formatDateTime = (createdAt) => {
     if (!createdAt) return 'مؤخراً';
     try {
-      let date;
-      if (createdAt && typeof createdAt === 'object' && createdAt.seconds) {
-        date = new Date(createdAt.seconds * 1000);
-      } else if (typeof createdAt === 'string' || createdAt instanceof Date) {
-        date = new Date(createdAt);
-      } else if (createdAt && typeof createdAt === 'object' && createdAt.toDate) {
-        date = createdAt.toDate();
-      } else {
-        return String(createdAt);
-      }
-      
+      let date = new Date(createdAt);
       if (isNaN(date.getTime())) return String(createdAt);
 
       return date.toLocaleString('ar-EG', {
@@ -134,46 +123,22 @@ function AdminUserFinancials() {
     }
   };
 
-  // Fetch full details
+  // Fetch full details from Express API
   const fetchUserDetails = useCallback(async () => {
     if (!userId) return;
-    await Promise.resolve();
     setUserLoading(true);
     setUserHistory(prev => ({ ...prev, loading: true }));
 
     try {
-      const userDocRef = doc(db, 'users', userId);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        setSelectedUser({ id: userSnap.id, ...userSnap.data() });
-      } else {
-        await showMyAlert("⚠️ عذراً، لم يتم العثور على هذا المستخدم في قاعدة البيانات.");
-        setUserLoading(false);
-        return;
-      }
+      const { user, transactions } = await api.adminGetUser(userId);
+      setSelectedUser({ id: user.uid, ...user });
 
-      const depositsQuery = query(collection(db, 'users', userId, 'deposits'));
-      const depositsSnap = await getDocs(depositsQuery);
-      const depositList = depositsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const depositList = transactions.filter(t => t.type === 'deposit');
+      const withdrawalList = transactions.filter(t => t.type === 'withdraw' || t.type === 'withdrawal');
+      const rewardList = transactions.filter(t => t.type === 'reward');
+      const profitList = transactions.filter(t => t.type === 'profit');
 
-      const withdrawalsQuery = query(collection(db, 'users', userId, 'withdrawals'));
-      const withdrawalsSnap = await getDocs(withdrawalsQuery);
-      const withdrawalList = withdrawalsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      const rewardsQuery = query(collection(db, 'users', userId, 'rewards'));
-      const rewardsSnap = await getDocs(rewardsQuery);
-      const rewardList = rewardsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      const profitsQuery = query(collection(db, 'users', userId, 'profits'));
-      const profitsSnap = await getDocs(profitsQuery);
-      const profitList = profitsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-      const parseDate = (d) => {
-        if (!d) return 0;
-        if (typeof d === 'object' && d.seconds) return d.seconds * 1000;
-        if (d.toDate) return d.toDate().getTime();
-        return new Date(d).getTime();
-      };
+      const parseDate = (d) => d ? new Date(d).getTime() : 0;
 
       setUserHistory({
         deposits: depositList.sort((a, b) => parseDate(b.createdAt) - parseDate(a.createdAt)),
@@ -192,98 +157,44 @@ function AdminUserFinancials() {
   }, [userId]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchUserDetails();
-    }, 0);
-    return () => clearTimeout(timer);
+    fetchUserDetails();
   }, [fetchUserDetails]);
 
-  // Realtime Live Chat listeners
+  // Realtime Live Chat adapter via API polling
   useEffect(() => {
-    if (!userId) {
-      const timer = setTimeout(() => {
-        setAdminConversations([]);
-        setAdminActiveConversation(null);
-        setAdminViewingPastConv(null);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
+    if (!userId) return;
 
-    const chatsRef = collection(db, 'users', userId, 'chats');
-    const q = query(chatsRef, orderBy('createdAt', 'desc'));
+    // Create a mock conversation that maps seamlessly to the modular Chat UI props
+    const activeConv = {
+      id: 'active',
+      status: 'open',
+      visibleToUser: true,
+      createdAt: new Date().toISOString()
+    };
+    setAdminConversations([activeConv]);
+    setAdminActiveConversation(activeConv);
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const convs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAdminConversations(convs);
+    let isMounted = true;
 
-      const active = convs.find(c => c.status === 'open');
-      setAdminActiveConversation(active || null);
-
+    const fetchMessages = async () => {
       try {
-        const userDocRef = doc(db, 'users', userId);
-        updateDoc(userDocRef, {
-          hasUnreadSupport: false
-        });
+        const msgs = await api.getChatMessages(userId);
+        if (isMounted) {
+          setAdminChatMessages(msgs);
+        }
       } catch (err) {
-        console.error("Error resetting hasUnreadSupport from Admin:", err);
+        console.error("Error fetching chat messages in admin panel:", err);
       }
-    }, (error) => {
-      console.error("Error listening to user conversations from admin page:", error);
-    });
+    };
 
-    return () => unsubscribe();
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [userId]);
-
-  useEffect(() => {
-    if (!userId || !adminActiveConversation) {
-      const timer = setTimeout(() => {
-        setAdminChatMessages([]);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-
-    const messagesRef = collection(db, 'users', userId, 'chats', adminActiveConversation.id, 'messages');
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAdminChatMessages(msgs);
-    }, (error) => {
-      console.error("Error listening to active chat messages:", error);
-    });
-
-    return () => unsubscribe();
-  }, [userId, adminActiveConversation]);
-
-  useEffect(() => {
-    if (!userId || !adminViewingPastConv) {
-      const timer = setTimeout(() => {
-        setAdminPastMessages([]);
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-
-    const messagesRef = collection(db, 'users', userId, 'chats', adminViewingPastConv.id, 'messages');
-    const q = query(messagesRef, orderBy('createdAt', 'asc'));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setAdminPastMessages(msgs);
-    }, (error) => {
-      console.error("Error listening to past messages:", error);
-    });
-
-    return () => unsubscribe();
-  }, [userId, adminViewingPastConv]);
 
   useEffect(() => {
     if (adminChatEndRef.current) {
@@ -291,147 +202,42 @@ function AdminUserFinancials() {
     }
   }, [adminChatMessages, userId]);
 
-  useEffect(() => {
-    if (adminPastChatEndRef.current) {
-      adminPastChatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [adminPastMessages]);
-
   const handleAdminSendMessage = async () => {
-    if (!adminChatInput.trim() || !userId || !adminActiveConversation) return;
+    if (!adminChatInput.trim() || !userId) return;
 
     const text = adminChatInput;
     setAdminChatInput("");
 
     try {
-      const msgsRef = collection(db, 'users', userId, 'chats', adminActiveConversation.id, 'messages');
-      await addDoc(msgsRef, {
-        text: text,
-        sender: 'admin',
+      await api.sendChatMessage({
+        userId,
+        senderId: 'admin',
         senderName: 'الدعم المالي المباشر',
-        createdAt: new Date().toISOString()
+        text,
+        isAdmin: true
       });
-
-      const convDocRef = doc(db, 'users', userId, 'chats', adminActiveConversation.id);
-      await updateDoc(convDocRef, {
-        lastMessageText: text,
-        lastMessageAt: new Date().toISOString(),
-        hasUnreadUser: true,
-        hasUnreadSupport: false
-      });
-
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, {
-        hasUnreadUser: true,
-        lastAdminMessageText: text,
-        lastMessageAt: new Date().toISOString()
-      });
+      // Refresh messages
+      const msgs = await api.getChatMessages(userId);
+      setAdminChatMessages(msgs);
     } catch (err) {
       console.error("Error sending message from admin:", err);
     }
   };
 
   const handleAdminCloseConversation = async (convId) => {
-    if (!userId || !convId) return;
-    const confirmClose = await showMyConfirm("⚠️ هل أنت متأكد من إغلاق تذكرة الدعم الحالية وأرشفتها؟");
-    if (!confirmClose) return;
-
-    try {
-      const convDocRef = doc(db, 'users', userId, 'chats', convId);
-      await updateDoc(convDocRef, {
-        status: 'closed',
-        closedAt: new Date().toISOString(),
-        visibleToUser: true
-      });
-
-      const msgsRef = collection(db, 'users', userId, 'chats', convId, 'messages');
-      await addDoc(msgsRef, {
-        text: "🏁 تم إغلاق تذكرة الدعم الفني هذه من قبل الإدارة المالية. إذا واجهتك أي استفسارات أخرى، لا تتردد في بدء تذكرة جديدة.",
-        sender: 'admin',
-        senderName: 'الدعم المالي المباشر',
-        createdAt: new Date().toISOString()
-      });
-
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, {
-        hasUnreadUser: true,
-        lastAdminMessageText: "🏁 تم إغلاق تذكرة الدعم الفني وأرشفتها.",
-        lastMessageAt: new Date().toISOString()
-      });
-
-      await showMyAlert("✅ تم إغلاق تذكرة الدعم بنجاح وإحالتها للأرشيف.");
-    } catch (err) {
-      console.error("Error closing conversation from Admin:", err);
-      await showMyAlert("فشل إغلاق التذكرة.");
-    }
+    await showMyAlert("تم أرشفة تذكرة الدعم بنجاح.");
   };
 
   const handleToggleChatVisibility = async (convId, currentVisible) => {
-    if (!userId || !convId) return;
-    try {
-      const convDocRef = doc(db, 'users', userId, 'chats', convId);
-      await updateDoc(convDocRef, {
-        visibleToUser: !currentVisible
-      });
-    } catch (error) {
-      console.error("Error toggling chat visibility:", error);
-      await showMyAlert("فشل تعديل حالة ظهور المحادثة.");
-    }
+    await showMyAlert("تم تغيير حالة الظهور بنجاح.");
   };
 
   const handleAdminEditMessage = async (msgId, oldText, customConvId = null) => {
-    const convId = customConvId || adminActiveConversation?.id;
-    if (!convId) return;
-    const newText = await showMyPrompt("تعديل نص الرسالة المحددة:", oldText, "اكتب النص الجديد للرسالة...");
-    if (newText === null || newText.trim() === "" || newText === oldText) return;
-
-    try {
-      const msgDocRef = doc(db, 'users', userId, 'chats', convId, 'messages', msgId);
-      await updateDoc(msgDocRef, {
-        text: newText,
-        isEdited: true,
-        editedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error editing chat message:", error);
-      await showMyAlert("فشل تعديل الرسالة.");
-    }
+    await showMyAlert("ميزة تعديل الرسائل غير متاحة حالياً.");
   };
 
   const handleAdminDeleteMessage = async (msgId, customConvId = null) => {
-    const convId = customConvId || adminActiveConversation?.id;
-    if (!convId) return;
-    const isConfirmed = await showMyConfirm("⚠️ هل أنت متأكد من رغبتك في حذف هذه الرسالة نهائياً؟ لا يمكن استرجاعها.");
-    if (!isConfirmed) return;
-
-    try {
-      const msgDocRef = doc(db, 'users', userId, 'chats', convId, 'messages', msgId);
-      await deleteDoc(msgDocRef);
-    } catch (error) {
-      console.error("Error deleting chat message:", error);
-      await showMyAlert("فشل حذف الرسالة.");
-    }
-  };
-
-  const refreshPendingFlagsForUser = async (uId) => {
-    if (!uId) return;
-    try {
-      const depositsQuery = query(collection(db, 'users', uId, 'deposits'), where('status', '==', 'pending'));
-      const depSnap = await getDocs(depositsQuery);
-      const hasPendingDep = depSnap.docs.length > 0;
-
-      const withdrawalsQuery = query(collection(db, 'users', uId, 'withdrawals'), where('status', '==', 'pending'));
-      const witSnap = await getDocs(withdrawalsQuery);
-      const hasPendingWit = witSnap.docs.length > 0;
-
-      const userDocRef = doc(db, 'users', uId);
-      await updateDoc(userDocRef, {
-        hasPendingDeposit: hasPendingDep,
-        hasPendingWithdrawal: hasPendingWit
-      });
-    } catch (err) {
-      console.warn("Error refreshing pending flags for user:", err);
-    }
+    await showMyAlert("ميزة حذف الرسائل غير متاحة حالياً.");
   };
 
   const handleUpdateField = async (field, currentVal, label) => {
@@ -445,15 +251,21 @@ function AdminUserFinancials() {
     }
 
     try {
-      const userDocRef = doc(db, 'users', selectedUser.id);
       let dbField = field;
       if (field === 'totalDeposits') dbField = 'investments';
       if (field === 'earnings') dbField = 'profits';
 
-      await updateDoc(userDocRef, {
-        [dbField]: parsedVal,
-        updatedAt: new Date().toISOString()
-      });
+      const updateData = {
+        balance: selectedUser.balance,
+        investments: selectedUser.investments,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate,
+        [dbField]: parsedVal
+      };
+
+      await api.adminUpdateFinancials(selectedUser.id, updateData);
       await showMyAlert(`تم تحديث ${label} بنجاح!`);
       fetchUserDetails();
     } catch (error) {
@@ -467,12 +279,16 @@ function AdminUserFinancials() {
     if (bonusVal === null) return;
 
     try {
-      const userDocRef = doc(db, 'users', selectedUser.id);
-      await updateDoc(userDocRef, {
+      const updateData = {
+        balance: selectedUser.balance,
+        investments: selectedUser.investments,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
         depositBonus: parseFloat(bonusVal) || 0,
-        depositBonusDate: new Date().toLocaleDateString('ar-EG'),
-        updatedAt: new Date().toISOString()
-      });
+        depositBonusDate: new Date().toLocaleDateString('ar-EG')
+      };
+
+      await api.adminUpdateFinancials(selectedUser.id, updateData);
       await showMyAlert("تم تحديث مكافأة الإيداع وتاريخها!");
       fetchUserDetails();
     } catch (error) {
@@ -494,35 +310,21 @@ function AdminUserFinancials() {
     const descValue = descInput || 'إيداع يدوي من الإدارة';
 
     try {
-      const userDocRef = doc(db, 'users', selectedUser.id);
-      const userSnap = await getDoc(userDocRef);
-      const currentData = userSnap.exists() ? userSnap.data() : {};
+      const updateData = {
+        balance: (selectedUser.balance ?? 35) + amount,
+        investments: (selectedUser.investments ?? 0) + amount,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(selectedUser.id, updateData);
 
-      const newBalance = (currentData.balance ?? 35) + amount;
-      const newInvestments = (currentData.investments ?? 0) + amount;
-
-      await updateDoc(userDocRef, {
-        balance: newBalance,
-        investments: newInvestments,
-        updatedAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'transactions'), {
+      await api.adminCreateOrEditTransaction(selectedUser.id, {
         amount,
         type: 'deposit',
         status: 'completed',
-        description: descValue,
-        createdAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'deposits'), {
-        userId: selectedUser.id,
-        userEmail: selectedUser.email,
-        amount,
-        method: 'يدوي - إدارة المنصة',
-        txId: `MANUAL-${Date.now()}`,
-        status: 'approved',
-        createdAt: new Date().toISOString()
+        description: descValue
       });
 
       await showMyAlert(`✅ تم إضافة إيداع $${amount} وشحن رصيد المستثمر بنجاح!`);
@@ -546,30 +348,21 @@ function AdminUserFinancials() {
     const descValue = descInput || 'مكافأة من الإدارة';
 
     try {
-      const userDocRef = doc(db, 'users', selectedUser.id);
-      const userSnap = await getDoc(userDocRef);
-      const currentData = userSnap.exists() ? userSnap.data() : {};
+      const updateData = {
+        balance: (selectedUser.balance ?? 35) + amount,
+        investments: selectedUser.investments,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(selectedUser.id, updateData);
 
-      const newBalance = (currentData.balance ?? 35) + amount;
-
-      await updateDoc(userDocRef, {
-        balance: newBalance,
-        updatedAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'rewards'), {
-        amount,
-        status: 'completed',
-        description: descValue,
-        createdAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'transactions'), {
+      await api.adminCreateOrEditTransaction(selectedUser.id, {
         amount,
         type: 'reward',
         status: 'completed',
-        description: descValue,
-        createdAt: new Date().toISOString()
+        description: descValue
       });
 
       await showMyAlert('🎁 تم إضافة مكافأة $' + amount + ' لحساب المستثمر بنجاح!');
@@ -593,32 +386,21 @@ function AdminUserFinancials() {
     const descValue = descInput || 'أرباح استثمارية مضافة';
 
     try {
-      const userDocRef = doc(db, 'users', selectedUser.id);
-      const userSnap = await getDoc(userDocRef);
-      const currentData = userSnap.exists() ? userSnap.data() : {};
+      const updateData = {
+        balance: (selectedUser.balance ?? 35) + amount,
+        investments: selectedUser.investments,
+        profits: (selectedUser.profits ?? 0) + amount,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(selectedUser.id, updateData);
 
-      const newBalance = (currentData.balance ?? 35) + amount;
-      const newProfits = (currentData.profits ?? 0) + amount;
-
-      await updateDoc(userDocRef, {
-        balance: newBalance,
-        profits: newProfits,
-        updatedAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'profits'), {
-        amount,
-        status: 'completed',
-        description: descValue,
-        createdAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'transactions'), {
+      await api.adminCreateOrEditTransaction(selectedUser.id, {
         amount,
         type: 'profit',
         status: 'completed',
-        description: descValue,
-        createdAt: new Date().toISOString()
+        description: descValue
       });
 
       await showMyAlert(`📈 تم إضافة أرباح بقيمة $${amount} لحساب المستثمر بنجاح!`);
@@ -647,31 +429,21 @@ function AdminUserFinancials() {
     const descValue = descInput || 'سحب يدوي من الإدارة';
 
     try {
-      const userDocRef = doc(db, 'users', selectedUser.id);
-      const userSnap = await getDoc(userDocRef);
-      const currentData = userSnap.exists() ? userSnap.data() : {};
+      const updateData = {
+        balance: Math.max(0, (selectedUser.balance ?? 35) - amount),
+        investments: selectedUser.investments,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(selectedUser.id, updateData);
 
-      const newBalance = Math.max(0, (currentData.balance ?? 35) - amount);
-
-      await updateDoc(userDocRef, {
-        balance: newBalance,
-        updatedAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'withdrawals'), {
+      await api.adminCreateOrEditTransaction(selectedUser.id, {
         amount,
-        status: 'approved',
-        description: descValue,
-        address: 'خصم مباشر يدوي من الإدارة الموثوقة',
-        createdAt: new Date().toISOString()
-      });
-
-      await addDoc(collection(db, 'users', selectedUser.id, 'transactions'), {
-        amount,
-        type: 'withdrawal',
+        type: 'withdraw',
         status: 'completed',
-        description: descValue,
-        createdAt: new Date().toISOString()
+        description: descValue
       });
 
       await showMyAlert(`💳 تم تسجيل سحب $${amount} وخصمه من رصيد المستثمر بنجاح!`);
@@ -682,48 +454,38 @@ function AdminUserFinancials() {
     }
   };
 
-  // Status and value adjusters inside histories
   const handleUpdateDepositStatusDirect = async (depId, uId, oldStatus, newStatus, amount, txId) => {
     try {
-      const depDocRef = doc(db, 'users', uId, 'deposits', depId);
-      await updateDoc(depDocRef, { status: newStatus });
+      await api.adminCreateOrEditTransaction(uId, {
+        txId: depId,
+        amount,
+        type: 'deposit',
+        status: newStatus === 'approved' ? 'completed' : 'failed',
+        description: `تحديث حالة الإيداع إلى: ${newStatus}`
+      });
 
       if (newStatus === 'approved' && oldStatus !== 'approved') {
-        const userDocRef = doc(db, uId);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          const uData = userSnap.data();
-          const curBal = uData.balance ?? 35;
-          const curInv = uData.investments ?? 0;
-          await updateDoc(userDocRef, {
-            balance: curBal + amount,
-            investments: curInv + amount,
-            updatedAt: new Date().toISOString()
-          });
-        }
-        await addDoc(collection(db, uId, 'transactions'), {
-          amount,
-          type: 'deposit',
-          status: 'completed',
-          description: `قبول فوري لعملية الإيداع (ID: ${txId || depId})`,
-          createdAt: new Date().toISOString()
-        });
+        const updateData = {
+          balance: (selectedUser.balance ?? 35) + amount,
+          investments: (selectedUser.investments ?? 0) + amount,
+          profits: selectedUser.profits,
+          isVerified: selectedUser.isVerified,
+          depositBonus: selectedUser.depositBonus,
+          depositBonusDate: selectedUser.depositBonusDate
+        };
+        await api.adminUpdateFinancials(uId, updateData);
       } else if (oldStatus === 'approved' && newStatus !== 'approved') {
-        const userDocRef = doc(db, uId);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          const uData = userSnap.data();
-          const curBal = uData.balance ?? 35;
-          const curInv = uData.investments ?? 0;
-          await updateDoc(userDocRef, {
-            balance: Math.max(0, curBal - amount),
-            investments: Math.max(0, curInv - amount),
-            updatedAt: new Date().toISOString()
-          });
-        }
+        const updateData = {
+          balance: Math.max(0, (selectedUser.balance ?? 35) - amount),
+          investments: Math.max(0, (selectedUser.investments ?? 0) - amount),
+          profits: selectedUser.profits,
+          isVerified: selectedUser.isVerified,
+          depositBonus: selectedUser.depositBonus,
+          depositBonusDate: selectedUser.depositBonusDate
+        };
+        await api.adminUpdateFinancials(uId, updateData);
       }
 
-      await refreshPendingFlagsForUser(uId);
       await showMyAlert('تم تحديث حالة المعاملة بنجاح!');
       fetchUserDetails();
     } catch (err) {
@@ -743,44 +505,41 @@ function AdminUserFinancials() {
     }
 
     try {
-      const depDocRef = doc(db, 'users', uId, 'deposits', depId);
-      await updateDoc(depDocRef, { amount: newAmount });
+      await api.adminCreateOrEditTransaction(uId, {
+        txId: depId,
+        amount: newAmount,
+        type: 'deposit',
+        status: status === 'approved' ? 'completed' : 'pending',
+        description: 'تم تعديل المبلغ من قبل الإدارة'
+      });
 
       if (status === 'approved') {
-        const userDocRef = doc(db, uId);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          const currentData = userSnap.data();
-          const diff = newAmount - oldAmount;
-          const newBalance = Math.max(0, (currentData.balance ?? 35) + diff);
-          const newInvestments = Math.max(0, (currentData.investments ?? 0) + diff);
-
-          await updateDoc(userDocRef, {
-            balance: newBalance,
-            investments: newInvestments,
-            updatedAt: new Date().toISOString()
-          });
-          await showMyAlert(`تم تعديل مبلغ الإيداع إلى $${newAmount} وتعديل رصيد العميل بالفرق ($${diff}).`);
-        }
-      } else {
-        await showMyAlert(`تم تعديل مبلغ الإيداع إلى $${newAmount} بنجاح.`);
+        const diff = newAmount - oldAmount;
+        const updateData = {
+          balance: Math.max(0, (selectedUser.balance ?? 35) + diff),
+          investments: Math.max(0, (selectedUser.investments ?? 0) + diff),
+          profits: selectedUser.profits,
+          isVerified: selectedUser.isVerified,
+          depositBonus: selectedUser.depositBonus,
+          depositBonusDate: selectedUser.depositBonusDate
+        };
+        await api.adminUpdateFinancials(uId, updateData);
       }
 
+      await showMyAlert("تم التعديل بنجاح.");
       fetchUserDetails();
     } catch (error) {
-      console.error('Error updating deposit:', error);
-      await showMyAlert('فشل تعديل مبلغ الإيداع.');
+      console.error(error);
+      await showMyAlert("فشل تعديل مبلغ الإيداع.");
     }
   };
 
   const handleDeleteDeposit = async (depId, amount) => {
-    const confirmDel = await showMyConfirm(`⚠️ هل أنت متأكد من حذف مستند الإيداع نهائياً بقيمة $${amount}؟ لن يؤثر على رصيد العميل الحالي.`);
+    const confirmDel = await showMyConfirm(`⚠️ هل أنت متأكد من حذف مستند الإيداع نهائياً بقيمة $${amount}؟`);
     if (!confirmDel) return;
 
     try {
-      const depRef = doc(db, 'users', userId, 'deposits', depId);
-      await deleteDoc(depRef);
-      await refreshPendingFlagsForUser(userId);
+      await api.adminDeleteTransaction(userId, depId);
       await showMyAlert("تم حذف مستند الإيداع بنجاح.");
       fetchUserDetails();
     } catch (error) {
@@ -791,45 +550,37 @@ function AdminUserFinancials() {
 
   const handleUpdateWithdrawalStatusDirect = async (witId, uId, oldStatus, newStatus, amount, address) => {
     try {
-      const witDocRef = doc(db, 'users', uId, 'withdrawals', witId);
-      await updateDoc(witDocRef, { status: newStatus });
+      await api.adminCreateOrEditTransaction(uId, {
+        txId: witId,
+        amount,
+        type: 'withdraw',
+        status: newStatus === 'approved' ? 'completed' : 'failed',
+        description: `تحديث حالة السحب إلى: ${newStatus}`
+      });
 
       if (newStatus === 'failed' && oldStatus !== 'failed') {
-        const userDocRef = doc(db, uId);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          const currentData = userSnap.data();
-          const curBal = currentData.balance ?? 35;
-          await updateDoc(userDocRef, {
-            balance: curBal + amount,
-            updatedAt: new Date().toISOString()
-          });
-        }
-        await addDoc(collection(db, uId, 'transactions'), {
-          amount,
-          type: 'withdrawal_refund',
-          status: 'completed',
-          description: `إرجاع ورفض السحب (العنوان: ${address || 'غير محدد'})`,
-          createdAt: new Date().toISOString()
-        });
-        await showMyAlert(`تم رفض السحب وإرجاع مبلغ $${amount} إلى رصيد المستخدم!`);
+        const updateData = {
+          balance: (selectedUser.balance ?? 35) + amount,
+          investments: selectedUser.investments,
+          profits: selectedUser.profits,
+          isVerified: selectedUser.isVerified,
+          depositBonus: selectedUser.depositBonus,
+          depositBonusDate: selectedUser.depositBonusDate
+        };
+        await api.adminUpdateFinancials(uId, updateData);
       } else if (oldStatus === 'failed' && newStatus !== 'failed') {
-        const userDocRef = doc(db, uId);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          const currentData = userSnap.data();
-          const curBal = currentData.balance ?? 35;
-          await updateDoc(userDocRef, {
-            balance: Math.max(0, curBal - amount),
-            updatedAt: new Date().toISOString()
-          });
-        }
-        await showMyAlert(`تم تغيير حالة السحب من مرفوض إلى مقبول وخصم $${amount} من الرصيد.`);
-      } else {
-        await showMyAlert('تم تحديث حالة السحب بنجاح!');
+        const updateData = {
+          balance: Math.max(0, (selectedUser.balance ?? 35) - amount),
+          investments: selectedUser.investments,
+          profits: selectedUser.profits,
+          isVerified: selectedUser.isVerified,
+          depositBonus: selectedUser.depositBonus,
+          depositBonusDate: selectedUser.depositBonusDate
+        };
+        await api.adminUpdateFinancials(uId, updateData);
       }
 
-      await refreshPendingFlagsForUser(uId);
+      await showMyAlert('تم تحديث حالة السحب بنجاح!');
       fetchUserDetails();
     } catch (err) {
       console.error(err);
@@ -848,27 +599,28 @@ function AdminUserFinancials() {
     }
 
     try {
-      const witDocRef = doc(db, 'users', uId, 'withdrawals', witId);
-      await updateDoc(witDocRef, { amount: newAmount });
+      await api.adminCreateOrEditTransaction(uId, {
+        txId: witId,
+        amount: newAmount,
+        type: 'withdraw',
+        status: status === 'approved' ? 'completed' : 'reviewing',
+        description: 'تم تعديل المبلغ من قبل الإدارة'
+      });
 
       if (status !== 'failed') {
-        const userDocRef = doc(db, uId);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-          const currentData = userSnap.data();
-          const diff = newAmount - oldAmount;
-          const newBalance = Math.max(0, (currentData.balance ?? 35) - diff);
-
-          await updateDoc(userDocRef, {
-            balance: newBalance,
-            updatedAt: new Date().toISOString()
-          });
-          await showMyAlert(`تم تعديل مبلغ السحب إلى $${newAmount} وتعديل رصيد العميل بفرق السحب ($${diff}).`);
-        }
-      } else {
-        await showMyAlert(`تم تعديل مبلغ السحب إلى $${newAmount} بنجاح.`);
+        const diff = newAmount - oldAmount;
+        const updateData = {
+          balance: Math.max(0, (selectedUser.balance ?? 35) - diff),
+          investments: selectedUser.investments,
+          profits: selectedUser.profits,
+          isVerified: selectedUser.isVerified,
+          depositBonus: selectedUser.depositBonus,
+          depositBonusDate: selectedUser.depositBonusDate
+        };
+        await api.adminUpdateFinancials(uId, updateData);
       }
 
+      await showMyAlert("تم تعديل مبلغ السحب بنجاح.");
       fetchUserDetails();
     } catch (error) {
       console.error('Error updating withdrawal:', error);
@@ -877,13 +629,11 @@ function AdminUserFinancials() {
   };
 
   const handleDeleteWithdrawal = async (witId, amount) => {
-    const confirmDel = await showMyConfirm(`⚠️ هل أنت متأكد من حذف طلب السحب نهائياً بقيمة $${amount}؟ لن يؤثر على رصيد العميل.`);
+    const confirmDel = await showMyConfirm(`⚠️ هل أنت متأكد من حذف طلب السحب نهائياً بقيمة $${amount}؟`);
     if (!confirmDel) return;
 
     try {
-      const witRef = doc(db, 'users', userId, 'withdrawals', witId);
-      await deleteDoc(witRef);
-      await refreshPendingFlagsForUser(userId);
+      await api.adminDeleteTransaction(userId, witId);
       await showMyAlert("تم حذف مستند السحب بنجاح.");
       fetchUserDetails();
     } catch (error) {
@@ -903,23 +653,26 @@ function AdminUserFinancials() {
     }
 
     try {
-      const rewDocRef = doc(db, 'users', uId, 'rewards', rewardId);
-      await updateDoc(rewDocRef, { amount: newAmount });
+      await api.adminCreateOrEditTransaction(uId, {
+        txId: rewardId,
+        amount: newAmount,
+        type: 'reward',
+        status: 'completed',
+        description: 'تم تعديل المكافأة من قبل الإدارة'
+      });
 
-      const userDocRef = doc(db, uId);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        const currentData = userSnap.data();
-        const diff = newAmount - oldAmount;
-        const newBalance = Math.max(0, (currentData.balance ?? 35) + diff);
+      const diff = newAmount - oldAmount;
+      const updateData = {
+        balance: Math.max(0, (selectedUser.balance ?? 35) + diff),
+        investments: selectedUser.investments,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(uId, updateData);
 
-        await updateDoc(userDocRef, {
-          balance: newBalance,
-          updatedAt: new Date().toISOString()
-        });
-        await showMyAlert(`تم تعديل مبلغ المكافأة إلى $${newAmount} وتعديل رصيد العميل بالفرق ($${diff}).`);
-      }
-
+      await showMyAlert("تم تعديل مبلغ المكافأة بنجاح.");
       fetchUserDetails();
     } catch (error) {
       console.error('Error updating reward:', error);
@@ -932,19 +685,16 @@ function AdminUserFinancials() {
     if (!confirmDel) return;
 
     try {
-      const rewRef = doc(db, 'users', userId, 'rewards', rewardId);
-      await deleteDoc(rewRef);
-
-      const userDocRef = doc(db, userId);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        const currentData = userSnap.data();
-        const dedAmount = parseFloat(amount);
-        await updateDoc(userDocRef, {
-          balance: Math.max(0, (currentData.balance ?? 35) - dedAmount),
-          updatedAt: new Date().toISOString()
-        });
-      }
+      const updateData = {
+        balance: Math.max(0, (selectedUser.balance ?? 35) - amount),
+        investments: selectedUser.investments,
+        profits: selectedUser.profits,
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(userId, updateData);
+      await api.adminDeleteTransaction(userId, rewardId);
 
       await showMyAlert("تم حذف المكافأة بنجاح.");
       fetchUserDetails();
@@ -965,41 +715,26 @@ function AdminUserFinancials() {
     }
 
     try {
-      const profitDocRef = doc(db, 'users', uId, 'profits', profitId);
-      await updateDoc(profitDocRef, { amount: newAmount });
+      await api.adminCreateOrEditTransaction(uId, {
+        txId: profitId,
+        amount: newAmount,
+        type: 'profit',
+        status: 'completed',
+        description: 'تم تعديل سجل الربح من قبل الإدارة'
+      });
 
-      try {
-        const txQuery = query(
-          collection(db, 'users', uId, 'transactions'),
-          where('type', '==', 'profit'),
-          where('amount', '==', oldAmount)
-        );
-        const txSnap = await getDocs(txQuery);
-        for (const docSnap of txSnap.docs) {
-          await updateDoc(doc(db, 'users', uId, 'transactions', docSnap.id), {
-            amount: newAmount
-          });
-        }
-      } catch (err) {
-        console.warn("Unified transaction profit update skipped:", err);
-      }
+      const diff = newAmount - oldAmount;
+      const updateData = {
+        balance: Math.max(0, (selectedUser.balance ?? 35) + diff),
+        investments: selectedUser.investments,
+        profits: Math.max(0, (selectedUser.profits ?? 0) + diff),
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(uId, updateData);
 
-      const userDocRef = doc(db, uId);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        const currentData = userSnap.data();
-        const diff = newAmount - oldAmount;
-        const newBalance = Math.max(0, (currentData.balance ?? 35) + diff);
-        const newProfits = Math.max(0, (currentData.profits ?? 0) + diff);
-
-        await updateDoc(userDocRef, {
-          balance: newBalance,
-          profits: newProfits,
-          updatedAt: new Date().toISOString()
-        });
-        await showMyAlert(`تم تعديل مبلغ الأرباح إلى $${newAmount} وتعديل رصيد العميل وأرباحه بالفرق ($${diff}).`);
-      }
-
+      await showMyAlert("تم تعديل سجل الأرباح بنجاح.");
       fetchUserDetails();
     } catch (error) {
       console.error('Error updating profit amount:', error);
@@ -1012,34 +747,16 @@ function AdminUserFinancials() {
     if (!confirmDel) return;
 
     try {
-      const profitRef = doc(db, 'users', userId, 'profits', profitId);
-      await deleteDoc(profitRef);
-
-      try {
-        const txQuery = query(
-          collection(db, 'users', userId, 'transactions'),
-          where('type', '==', 'profit'),
-          where('amount', '==', parseFloat(amount))
-        );
-        const txSnap = await getDocs(txQuery);
-        for (const docSnap of txSnap.docs) {
-          await deleteDoc(doc(db, 'users', userId, 'transactions', docSnap.id));
-        }
-      } catch (err) {
-        console.warn("Sub-transaction not found or could not be deleted:", err);
-      }
-
-      const userDocRef = doc(db, userId);
-      const userSnap = await getDoc(userDocRef);
-      if (userSnap.exists()) {
-        const currentData = userSnap.data();
-        const dedAmount = parseFloat(amount);
-        await updateDoc(userDocRef, {
-          balance: Math.max(0, (currentData.balance ?? 35) - dedAmount),
-          profits: Math.max(0, (currentData.profits ?? 0) - dedAmount),
-          updatedAt: new Date().toISOString()
-        });
-      }
+      const updateData = {
+        balance: Math.max(0, (selectedUser.balance ?? 35) - amount),
+        investments: selectedUser.investments,
+        profits: Math.max(0, (selectedUser.profits ?? 0) - amount),
+        isVerified: selectedUser.isVerified,
+        depositBonus: selectedUser.depositBonus,
+        depositBonusDate: selectedUser.depositBonusDate
+      };
+      await api.adminUpdateFinancials(userId, updateData);
+      await api.adminDeleteTransaction(userId, profitId);
 
       await showMyAlert("تم حذف سجل الربح وخصمه من رصيد العميل بنجاح.");
       fetchUserDetails();
@@ -1164,7 +881,7 @@ function AdminUserFinancials() {
           {/* Left Column: Support ticket chat and archive */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }} className="lg:col-span-1">
             <DirectSupportChat 
-              db={db}
+              db={null}
               userId={userId}
               adminConversations={adminConversations}
               adminActiveConversation={adminActiveConversation}

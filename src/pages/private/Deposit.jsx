@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { db } from '../../config/firebase';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { api } from '../../lib/api';
 import './Deposit.css';
 
 function Deposit() {
@@ -26,31 +25,8 @@ function Deposit() {
 
     setLoading(true);
     try {
-      // 1. إضافة المعاملة في الكولكشن الفرعي للإيداعات تحت حساب العميل ليراها الأدمن والمستخدم بنظام منظم
-      await addDoc(collection(db, 'users', currentUser.uid, 'deposits'), {
-        userId: currentUser.uid,
-        userEmail: currentUser.email,
-        amount: Number(amount),
-        method: method,
-        txId: txId.trim(),
-        status: 'pending',
-        createdAt: new Date().toISOString()
-      });
-
-      // 2. إضافة سجل حركة مالية فرعي في محفظة المستخدم
-      await addDoc(collection(db, 'users', currentUser.uid, 'transactions'), {
-        amount: Number(amount),
-        type: 'deposit',
-        status: 'pending',
-        description: `طلب إيداع عبر ${method} (معرف: ${txId})`,
-        createdAt: new Date().toISOString()
-      });
-
-      // 3. تحديث مستند المستخدم الرئيسي بوجود طلب إيداع معلق
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        hasPendingDeposit: true,
-        updatedAt: new Date().toISOString()
-      });
+      const description = `طلب إيداع عبر ${method} (معرف: ${txId.trim()})`;
+      await api.submitDeposit(currentUser.uid, Number(amount), description);
 
       alert('تم تقديم طلب الإيداع بنجاح! سيقوم الدعم الفني بمراجعته وتفعيل الرصيد خلال دقائق.');
       navigate('/account');
