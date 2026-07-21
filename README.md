@@ -1,71 +1,20 @@
-<<<<<<< HEAD
-# Byte X Platform
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
+</div>
 
-مشروع React + Vite مع Firebase Hosting.
+# Run and deploy your AI Studio app
 
-## التشغيل
+This contains everything you need to run your app locally.
 
-```bash
-pnpm install
-pnpm dev
-```
+View your app in AI Studio: https://ai.studio/apps/0339075c-70bf-4fe2-a7d3-98a6c8a7f0df
 
-## البناء
+## Run Locally
 
-```bash
-pnpm build
-```
+**Prerequisites:**  Node.js
 
-## الفحص
 
-```bash
-pnpm lint
-```
-
-## النشر على Firebase
-
-```bash
-firebase deploy
-```
-
-## الملاحظات
-
-- ملف إعدادات التصدير موجود في [vite.config.js](vite.config.js)
-- ملف الاستضافة Firebase موجود في [firebase.json](firebase.json)
-- ملفات المصدر الرئيسية موجودة داخل [src](src)
-=======
-# Byte X Platform
-
-مشروع React + Vite مع Firebase Hosting.
-
-## التشغيل
-
-```bash
-pnpm install
-pnpm dev
-```
-
-## البناء
-
-```bash
-pnpm build
-```
-
-## الفحص
-
-```bash
-pnpm lint
-```
-
-## النشر على Firebase
-
-```bash
-firebase deploy
-```
-
-## الملاحظات
-
-- ملف إعدادات التصدير موجود في [vite.config.js](vite.config.js)
-- ملف الاستضافة Firebase موجود في [firebase.json](firebase.json)
-- ملفات المصدر الرئيسية موجودة داخل [src](src)
->>>>>>> 53f08c94e74e84fc7a52fa26ff5f51acded6f1b0
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`

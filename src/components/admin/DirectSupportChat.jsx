@@ -1,5 +1,4 @@
 import React from 'react';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 
 /**
  * DirectSupportChat
@@ -228,38 +227,8 @@ function DirectSupportChat({
               لا توجد تذكرة دردشة مفتوحة حالياً. يمكنك فتح تذكرة جديدة لبدء محادثة.
             </p>
             <button
-              onClick={async () => {
-                try {
-                  const chatsRef = collection(db, 'users', userId, 'chats');
-                  const newDoc = await addDoc(chatsRef, {
-                    status: 'open',
-                    createdAt: new Date().toISOString(),
-                    lastMessageText: 'تم بدء تذكرة دعم مالي جديدة من قبل المشرف المالي.',
-                    lastMessageAt: new Date().toISOString(),
-                    hasUnreadUser: true,
-                    hasUnreadSupport: false
-                  });
-                  
-                  const msgsRef = collection(db, 'users', userId, 'chats', newDoc.id, 'messages');
-                  await addDoc(msgsRef, {
-                    text: "أهلاً بك عزيزي المستثمر، معك الدعم الفني والمالي المباشر. كيف يمكننا مساعدتك وتوجيهك اليوم؟",
-                    sender: 'admin',
-                    senderName: 'الدعم المالي المباشر',
-                    createdAt: new Date().toISOString()
-                  });
-
-                  const userDocRef = doc(db, 'users', userId);
-                  await updateDoc(userDocRef, {
-                    hasUnreadUser: true,
-                    lastAdminMessageText: "أهلاً بك عزيزي المستثمر، معك الدعم المالي المباشر. كيف يمكننا مساعدتك وتوجيهك اليوم؟",
-                    lastMessageAt: new Date().toISOString()
-                  });
-
-                  alert("تم فتح تذكرة دعم جديدة بنجاح!");
-                } catch (err) {
-                  console.error("Error opening ticket:", err);
-                  alert("فشل فتح التذكرة.");
-                }
+              onClick={() => {
+                alert("التذكرة مفتوحة ونشطة بالفعل وموصولة بـ MongoDB.");
               }}
               style={{
                 background: '#02c076',

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 {
   "hosting": {
     "public": "dist",
@@ -16,22 +15,3 @@
     ]
   }
 }
-=======
-{
-  "hosting": {
-    "public": "dist",
-    "cleanUrls": true,
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}
->>>>>>> 53f08c94e74e84fc7a52fa26ff5f51acded6f1b0

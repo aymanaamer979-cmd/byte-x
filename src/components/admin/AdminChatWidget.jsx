@@ -1,17 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { db } from '../../config/firebase';
-import { 
-  collection, 
-  collectionGroup, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc,
-  doc, 
-  query, 
-  orderBy, 
-  onSnapshot 
-} from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { api } from '../../lib/api';
 
 export default function AdminChatWidget() {
   const { userData } = useAuth();
@@ -24,53 +13,48 @@ export default function AdminChatWidget() {
 
   const isSupportedAdmin = userData && userData.role === 'admin';
 
-  // 1. الاستماع لجميع المستخدمين في النظام لمعرفة أسمائهم وحالتهم (نشط / غير نشط)
+  // 1. الاستماع لجميع المستخدمين والمحادثات من MongoDB عبر Polling
   useEffect(() => {
     if (!isSupportedAdmin) return;
 
-    const usersRef = collection(db, 'users');
-    const unsubscribe = onSnapshot(usersRef, (snapshot) => {
-      const uList = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setUsers(uList);
-    }, (error) => {
-      console.error("Error listening to users in AdminChatWidget:", error);
-    });
+    let isMounted = true;
 
-    return () => unsubscribe();
-  }, [isSupportedAdmin]);
+    const fetchUsersAndChats = async () => {
+      try {
+        const uList = await api.adminGetUsers();
+        if (isMounted) {
+          const formattedUsers = uList.map(u => ({
+            id: u.uid,
+            ...u
+          }));
+          setUsers(formattedUsers);
 
-  // 2. الاستماع لجميع المحادثات عبر كافة المستخدمين (collectionGroup)
-  useEffect(() => {
-    if (!isSupportedAdmin) return;
+          // تحويل المستخدمين إلى كائنات محادثات لتتوافق مع واجهة المستخدم الحالية
+          const formattedChats = formattedUsers.map(user => ({
+            id: user.uid,
+            userId: user.uid,
+            status: 'open',
+            createdAt: user.createdAt,
+            lastMessageText: user.lastAdminMessageText || 'محادثة دعم مباشر',
+            lastMessageAt: user.updatedAt || user.createdAt,
+            hasUnreadSupport: user.hasUnreadSupport || false,
+            hasUnreadUser: user.hasUnreadUser || false
+          }));
 
-    const q = collectionGroup(db, 'chats');
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const chatList = snapshot.docs.map(doc => {
-        const data = doc.data();
-        const userId = doc.ref.parent.parent.id; // استخراج معرف المستخدم الأب
-        return {
-          id: doc.id,
-          userId,
-          ...data
-        };
-      });
+          setChats(formattedChats);
+        }
+      } catch (error) {
+        console.error("Error fetching users/chats for AdminChatWidget from MongoDB:", error);
+      }
+    };
 
-      // ترتيب المحادثات حسب آخر تاريخ رسالة تنازلياً
-      chatList.sort((a, b) => {
-        const dateA = new Date(a.lastMessageAt || a.createdAt || 0);
-        const dateB = new Date(b.lastMessageAt || b.createdAt || 0);
-        return dateB - dateA;
-      });
+    fetchUsersAndChats();
+    const interval = setInterval(fetchUsersAndChats, 5000);
 
-      setChats(chatList);
-    }, (error) => {
-      console.error("Error listening to all chats via collectionGroup:", error);
-    });
-
-    return () => unsubscribe();
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [isSupportedAdmin]);
 
   if (!isSupportedAdmin) return null;
@@ -130,81 +114,16 @@ export default function AdminChatWidget() {
       }
       return updated;
     });
-
-    // تصفير مؤشر الرسائل غير المقروءة للادمن عند الفتح
-    try {
-      const chatDocRef = doc(db, 'users', chat.userId, 'chats', chat.id);
-      await updateDoc(chatDocRef, {
-        hasUnreadSupport: false
-      });
-    } catch (error) {
-      console.error("Error updating hasUnreadSupport status:", error);
-    }
   };
 
   // فتح/بدء محادثة مباشرة مع مستخدم معين من تبويب "المستثمرون"
   const handleStartChatWithUser = async (user) => {
-    // ابحث عن تذكرة مفتوحة أولاً
-    const existingChat = chats.find(c => c.userId === user.id && c.status !== 'closed');
-    if (existingChat) {
-      handleOpenChatTab(existingChat);
-      return;
-    }
-
-    // إذا لم تكن هناك تذكرة مفتوحة، يمكننا إعادة فتح أقدم تذكرة مؤرشفة أو إنشاء تذكرة جديدة تماماً
-    const existingClosedChat = chats.find(c => c.userId === user.id && c.status === 'closed');
-    if (existingClosedChat) {
-      try {
-        const chatDocRef = doc(db, 'users', user.id, 'chats', existingClosedChat.id);
-        await updateDoc(chatDocRef, {
-          status: 'open',
-          lastMessageText: 'تم إعادة فتح تذكرة الدعم بواسطة الإدارة 🔓',
-          lastMessageAt: new Date().toISOString()
-        });
-        handleOpenChatTab({ ...existingClosedChat, status: 'open' });
-      } catch (err) {
-        console.error("Error reopening existing closed chat:", err);
-      }
-      return;
-    }
-
-    // إنشاء تذكرة جديدة تماماً
-    try {
-      const chatsRef = collection(db, 'users', user.id, 'chats');
-      const newChatRef = await addDoc(chatsRef, {
-        status: 'open',
-        createdAt: new Date().toISOString(),
-        lastMessageText: 'مرحباً بك! تم بدء محادثة دعم جديدة.',
-        lastMessageAt: new Date().toISOString(),
-        hasUnreadUser: true,
-        hasUnreadSupport: false
-      });
-
-      const msgsRef = collection(db, 'users', user.id, 'chats', newChatRef.id, 'messages');
-      await addDoc(msgsRef, {
-        text: `أهلاً بك يا سيد ${user.displayName}، لقد قمنا بفتح هذه المحادثة لمساعدتك في أي استفسارات أو عمليات إيداع/سحب وتوجيهك اليوم بشكل مباشر.`,
-        sender: 'admin',
-        senderName: 'الدعم المالي المباشر',
-        createdAt: new Date().toISOString()
-      });
-
-      const userDocRef = doc(db, 'users', user.id);
-      await updateDoc(userDocRef, {
-        hasUnreadUser: true,
-        lastAdminMessageText: `لقد قمنا بفتح محادثة دعم جديدة لمساعدتك.`,
-        lastMessageAt: new Date().toISOString()
-      });
-
-      // فتح التبويب فوراً
-      handleOpenChatTab({
-        id: newChatRef.id,
-        userId: user.id,
-        status: 'open',
-        hasUnreadSupport: false
-      });
-    } catch (error) {
-      console.error("Error initiating new admin-user chat:", error);
-    }
+    handleOpenChatTab({
+      id: user.id,
+      userId: user.id,
+      status: 'open',
+      hasUnreadSupport: false
+    });
   };
 
   const handleCloseChatTab = (chatId) => {
@@ -391,23 +310,36 @@ function AdminChatTab({ tab, getUserData, onClose }) {
   const messagesEndRef = useRef(null);
   const user = getUserData(userId);
 
-  // الاستماع لرسائل هذه المحادثة
+  // الاستماع لرسائل هذه المحادثة عبر polling من MongoDB
   useEffect(() => {
-    const msgsRef = collection(db, 'users', userId, 'chats', chatId, 'messages');
-    const q = query(msgsRef, orderBy('createdAt', 'asc'));
+    let isMounted = true;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const msgs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setMessages(msgs);
-    }, (error) => {
-      console.error("Error listening to tab messages:", error);
-    });
+    const fetchTabMessages = async () => {
+      try {
+        const msgs = await api.getChatMessages(userId);
+        if (isMounted) {
+          const mapped = msgs.map(m => ({
+            id: m.id || m._id || m.createdAt,
+            text: m.text,
+            sender: m.isAdmin ? 'admin' : 'user',
+            senderName: m.senderName,
+            createdAt: m.createdAt
+          }));
+          setMessages(mapped);
+        }
+      } catch (err) {
+        console.error("Error fetching messages in AdminChatTab:", err);
+      }
+    };
 
-    return () => unsubscribe();
-  }, [userId, chatId]);
+    fetchTabMessages();
+    const interval = setInterval(fetchTabMessages, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [userId]);
 
   // التمرير التلقائي لأسفل عند وصول رسالة جديدة
   useEffect(() => {
@@ -423,29 +355,24 @@ function AdminChatTab({ tab, getUserData, onClose }) {
     setInputValue('');
 
     try {
-      const msgsRef = collection(db, 'users', userId, 'chats', chatId, 'messages');
-      await addDoc(msgsRef, {
-        text,
-        sender: 'admin',
+      await api.sendChatMessage({
+        userId,
+        senderId: 'admin',
         senderName: 'الدعم المالي المباشر',
-        createdAt: new Date().toISOString()
+        text,
+        isAdmin: true
       });
 
-      const chatDocRef = doc(db, 'users', userId, 'chats', chatId);
-      await updateDoc(chatDocRef, {
-        lastMessageText: text,
-        lastMessageAt: new Date().toISOString(),
-        hasUnreadUser: true,
-        hasUnreadSupport: false
-      });
-
-      const userDocRef = doc(db, 'users', userId);
-      await updateDoc(userDocRef, {
-        hasUnreadUser: true,
-        lastAdminMessageText: text,
-        lastMessageAt: new Date().toISOString()
-      });
-
+      // جلب فوري لتحديث واجهة المستخدم بسرعة
+      const msgs = await api.getChatMessages(userId);
+      const mapped = msgs.map(m => ({
+        id: m.id || m._id || m.createdAt,
+        text: m.text,
+        sender: m.isAdmin ? 'admin' : 'user',
+        senderName: m.senderName,
+        createdAt: m.createdAt
+      }));
+      setMessages(mapped);
     } catch (error) {
       console.error("Error sending admin reply:", error);
     }
@@ -453,30 +380,13 @@ function AdminChatTab({ tab, getUserData, onClose }) {
 
   // أرشفة وحل التذكرة
   const handleArchiveTicket = async () => {
-    if (!window.confirm(`هل أنت متأكد من رغبتك في أرشفة وحل هذه المحادثة مع المستثمر ${displayName}؟`)) return;
-
-    try {
-      const chatDocRef = doc(db, 'users', userId, 'chats', chatId);
-      await updateDoc(chatDocRef, {
-        status: 'closed',
-        closedAt: new Date().toISOString()
-      });
-      onClose();
-    } catch (error) {
-      console.error("Error archiving ticket:", error);
-    }
+    if (!window.confirm(`هل أنت متأكد من رغبتك في حل هذه المحادثة مع المستثمر ${displayName}؟`)) return;
+    onClose();
   };
 
   // حذف رسالة
   const handleDeleteMsg = async (msgId) => {
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذه الرسالة نهائياً؟")) return;
-
-    try {
-      const msgRef = doc(db, 'users', userId, 'chats', chatId, 'messages', msgId);
-      await deleteDoc(msgRef);
-    } catch (error) {
-      console.error("Error deleting message:", error);
-    }
+    alert("ميزة حذف الرسائل الفردية للإدارة غير متوفرة حالياً.");
   };
 
   // بدء تعديل رسالة
@@ -487,18 +397,8 @@ function AdminChatTab({ tab, getUserData, onClose }) {
 
   // حفظ التعديل
   const handleSaveEdit = async (msgId) => {
-    if (!editingText.trim()) return;
-
-    try {
-      const msgRef = doc(db, 'users', userId, 'chats', chatId, 'messages', msgId);
-      await updateDoc(msgRef, {
-        text: editingText,
-        isEdited: true
-      });
-      setEditingMsgId(null);
-    } catch (error) {
-      console.error("Error saving message edit:", error);
-    }
+    alert("تعديل الرسائل الفردية للإدارة غير متوفر حالياً.");
+    setEditingMsgId(null);
   };
 
   // الانتقال إلى السجل المالي والتحكم المالي للمستثمر في نافذة جديدة
