@@ -1,0 +1,82 @@
+/* الفوتر السفلي (كودك الأصلي كاملاً) */
+footer { 
+  margin-top: auto; 
+  background-color: #151a26; 
+  padding: 30px 20px; 
+  border-top: 1px solid #263147; 
+}
+
+.footer-header { 
+  max-width: 1100px; 
+  margin: 0 auto; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  flex-wrap: wrap; 
+  gap: 20px; 
+}
+
+.logo-footer { 
+  font-size: 22px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+  display: flex; 
+  align-items: center; 
+  gap: 5px; /* قللنا الفجوة لـ 5px عشان الـ X تلحم مع كلمة More */
+  border: 1px solid #263147; 
+  border-radius: 6px; 
+  padding: 6px 16px; 
+  background-color: #0b0e14; 
+}
+
+.logo-footer-img { 
+  height: 32px; 
+  width: auto; 
+  object-fit: contain; 
+}
+
+.copyright { 
+  color: #6e7583; 
+  font-size: 14px; 
+  text-align: center; 
+}
+
+/* 🎯 إضافة هامة لضبط الأزرار والروابط داخل الفوتر لتطابق الهيدر */
+.footer-header .nav-links {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-header .nav-links a,
+.footer-header .nav-btn-link {
+  color: #eaecef;
+  text-decoration: none;
+  font-size: 14px;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.2s;
+}
+
+.footer-header .nav-links a:hover,
+.footer-header .nav-btn-link:hover {
+  filter: brightness(1.2);
+}
+
+/* ميديا كويري بسيطة للموبايل عشان لو الشاشة صغرت يرتبهم بشكل متناسق */
+@media (max-width: 768px) {
+  .footer-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  .footer-header .nav-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

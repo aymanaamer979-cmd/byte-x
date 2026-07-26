@@ -1,0 +1,195 @@
+/* الفئات الحالية والمستقرة عندك كما هي */
+header { 
+  background-color: #151a26; 
+  padding: 10px 20px; 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  border-bottom: 1px solid #263147; 
+  position: sticky; 
+  top: 0; 
+  z-index: 100; 
+  height: 70px; 
+}
+.logo { 
+  font-size: 24px; 
+  font-weight: bold; 
+  color: #f3ba2f; 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  height: 100%; 
+  border: 1px solid #263147; 
+  border-radius: 6px; 
+  padding: 0 20px; 
+  background-color: #0b0e14; 
+  flex-shrink: 0;
+}
+.logo-img { 
+  height: 38px; 
+  width: auto; 
+  object-fit: contain; 
+}
+
+.account-profile-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+.account-profile-link:hover {
+  transform: scale(1.1);
+}
+.user-avatar-icon {
+  font-size: 32px;
+  color: #f3ba2f; 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.nav-links { 
+  display: flex; 
+  gap: 12px; 
+  list-style: none; 
+  align-items: center; 
+  padding: 0;
+  margin: 0;
+}
+.nav-item { 
+  border: 1px solid #263147; 
+  border-radius: 6px; 
+  background-color: #0b0e14; 
+  transition: 0.3s; 
+}
+.nav-item:hover { 
+  border-color: #f3ba2f; 
+}
+
+/* 🎯 تنسيق الرابط الحاضن للأيقونة والنص لمعلومات عنا */
+.nav-link-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* نفس المسافة بين الأيقونة والنص لزر الخطط */
+  color: #b7bdc6; 
+  text-decoration: none; 
+  font-size: 14px; 
+  transition: 0.3s; 
+  padding: 6px 14px; 
+}
+.nav-item:hover .nav-link-with-icon { 
+  color: #f3ba2f; 
+}
+
+.nav-btn-link {
+  background: none;
+  border: none;
+  color: #b7bdc6;
+  font-size: 14px;
+  font-family: inherit;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  font-weight: 500;
+}
+.nav-item:hover .nav-btn-link {
+  color: #f3ba2f; 
+}
+
+/* تنسيق حجم الأيقونات المشترك لـ (خطط الاستثمار ومعلومات عنا) */
+.nav-btn-icon {
+  height: 18px; 
+  width: auto;
+  object-fit: contain;
+}
+
+.btn-connect { 
+  background-color: #f3ba2f; 
+  color: #000; 
+  padding: 8px 16px; 
+  border: none; 
+  border-radius: 6px; 
+  font-weight: bold; 
+  cursor: pointer; 
+  transition: 0.3s; 
+  font-size: 14px; 
+  flex-shrink: 0; 
+  text-decoration: none;
+  display: inline-flex; 
+  align-items: center;
+  justify-content: center;
+  gap: 8px; 
+}
+.btn-connect:hover { 
+  background-color: #dba426; 
+}
+.btn-connect-icon {
+  height: 16px; 
+  width: auto;
+  object-fit: contain;
+}
+
+/* التجاوب في الموبايل */
+@media (max-width: 768px) {
+  header { padding: 5px 10px; height: 60px; }
+  .logo { font-size: 20px; padding: 0 12px; }
+  .logo-img { height: 32px; }
+  .nav-links { gap: 6px; }
+  .nav-link-with-icon, .nav-btn-link { font-size: 12px; padding: 4px 8px; gap: 5px; }
+  .nav-btn-icon { height: 14px; } 
+  .btn-connect { padding: 6px 12px; font-size: 12px; gap: 5px; }
+  .btn-connect-icon { height: 13px; } 
+}
+
+/* إخفاء العنصر في شاشات الموبايل (أقل من 768 بكسل) */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+
+.btn-connect.back-home-btn {
+  background-color: transparent;
+  border: 1px solid #323f5a;
+  color: #9aa4b2;
+}
+
+.btn-connect.back-home-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border-color: #f3ba2f;
+}
+
+.btn-connect-icon-arrow {
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.btn-connect.back-home-btn:hover .btn-connect-icon-arrow {
+  transform: translateX(-4px); /* حركة خفيفة للسهم لليمن/اليسار تزيد التفاعل */
+}
+
+
+/* تأثيرات لتوهج وحركة أيقونة الحساب */
+.user-avatar-img {
+  transition: all 0.3s ease;
+}
+
+.user-avatar-img:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 12px rgba(0, 255, 204, 0.6); /* توهج فوسفوري مميز عند تمرير الماوس */
+}
+
+/* ستايل بسيط لتحسين مظهر القائمة المنسدلة */
+.header-dropdown a:hover {
+  background-color: #1a1a1a;
+  color: #00ffcc !important;
+}
+
+.header-dropdown button:hover {
+  background-color: #1a1a1a;
+}
