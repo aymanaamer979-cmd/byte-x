@@ -10,60 +10,56 @@ import cors from 'cors';
 // ============================================================================
 // 💡 دالة متطورة لإعادة صياغة رابط الاتصال وضمان توجيهه دائماً إلى قاعدة بيانات 'more'
 function formatMongoUri(rawUri: string, targetDb: string = 'more'): string {
-  if (!rawUri) return rawUri;
-  try {
-    let uri = rawUri.trim();
+  if (!rawUri || typeof rawUri !== 'string') return rawUri;
+  let uri = rawUri.trim();
 
-    // 1. معالجة كلمة المرور إذا احتوت على علامة @
-    const protoIndex = uri.indexOf('://');
-    if (protoIndex !== -1) {
-      const protocol = uri.substring(0, protoIndex + 3);
-      const remaining = uri.substring(protoIndex + 3);
-      const lastAtIndex = remaining.lastIndexOf('@');
-      if (lastAtIndex !== -1) {
-        const credentials = remaining.substring(0, lastAtIndex);
-        const rest = remaining.substring(lastAtIndex);
-        const firstColonIndex = credentials.indexOf(':');
-        if (firstColonIndex !== -1) {
-          const user = credentials.substring(0, firstColonIndex);
-          const pass = credentials.substring(firstColonIndex + 1);
-          if (pass.includes('@') && !pass.includes('%40')) {
-            const encodedPass = pass.replace(/@/g, '%40');
-            uri = `${protocol}${user}:${encodedPass}${rest}`;
-          }
+  // 1. معالجة كلمة المرور إذا احتوت على علامة @
+  const protoIdx = uri.indexOf('://');
+  if (protoIdx !== -1) {
+    const proto = uri.substring(0, protoIdx + 3);
+    const rest = uri.substring(protoIdx + 3);
+    const lastAt = rest.lastIndexOf('@');
+    if (lastAt !== -1) {
+      const creds = rest.substring(0, lastAt);
+      const afterCreds = rest.substring(lastAt);
+      const colonIdx = creds.indexOf(':');
+      if (colonIdx !== -1) {
+        const user = creds.substring(0, colonIdx);
+        const pass = creds.substring(colonIdx + 1);
+        if (pass.includes('@') && !pass.includes('%40')) {
+          const encodedPass = pass.replace(/@/g, '%40');
+          uri = `${proto}${user}:${encodedPass}${afterCreds}`;
         }
       }
     }
-
-    // 2. فك وفصل الاستعلامات ?
-    const queryIndex = uri.indexOf('?');
-    let base = queryIndex !== -1 ? uri.substring(0, queryIndex) : uri;
-    const query = queryIndex !== -1 ? uri.substring(queryIndex) : '';
-
-    base = base.replace(/\/+$/, ''); // إزالة الشرطات المائلة في النهاية
-
-    const pIdx = base.indexOf('://');
-    if (pIdx === -1) return uri;
-
-    const protocolPart = base.substring(0, pIdx + 3);
-    const restPart = base.substring(pIdx + 3);
-
-    const firstSlashIndex = restPart.indexOf('/');
-    let hostPart = restPart;
-    if (firstSlashIndex !== -1) {
-      hostPart = restPart.substring(0, firstSlashIndex);
-    }
-
-    // إعادة بناء الرابط مستهدفاً قاعدة البيانات 'more' حصرياً
-    return `${protocolPart}${hostPart}/${targetDb}${query}`;
-  } catch (err) {
-    console.error("Error formatting MONGODB_URI:", err);
-    return rawUri;
   }
+
+  // 2. فصل واستخراج الجزء الخاص بـ Host والاستعلامات ? وتعديل اسم قاعدة البيانات
+  const protoIndex = uri.indexOf('://');
+  if (protoIndex === -1) return uri;
+
+  const protocol = uri.substring(0, protoIndex + 3);
+  const afterProto = uri.substring(protoIndex + 3);
+
+  const queryIndex = afterProto.indexOf('?');
+  let pathPart = queryIndex !== -1 ? afterProto.substring(0, queryIndex) : afterProto;
+  const queryPart = queryIndex !== -1 ? afterProto.substring(queryIndex) : '';
+
+  const firstSlashIndex = pathPart.indexOf('/');
+  let hostPart = pathPart;
+  if (firstSlashIndex !== -1) {
+    hostPart = pathPart.substring(0, firstSlashIndex);
+  }
+
+  return `${protocol}${hostPart}/${targetDb}${queryPart}`;
 }
 
 const DEFAULT_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
-let MONGODB_URI = formatMongoUri(process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGODB_URI, 'more');
+const MONGODB_URI = formatMongoUri(process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGODB_URI, 'more');
+
+// تحديث متغيرات البيئة لضمان إجبار أي مكتبة أو وحدة تستخدم process.env على القراءة من 'more'
+process.env.MONGODB_URI = MONGODB_URI;
+process.env.DATABASE_URL = MONGODB_URI;
 
 // التخزين المؤقت للاتصال لبيئات Vercel Serverless
 let cached = (global as any).mongoose;
