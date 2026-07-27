@@ -8,42 +8,62 @@ import cors from 'cors';
 // ============================================================================
 // 1. إعدادات اتصال MONGODB ATLAS (مرحلة التجريب والتطوير)
 // ============================================================================
-// 💡 تم ترك الرابط والباسورد في الكود مباشرة لتسهيل مرحلة التجريب حسب طلبك.
-// ⚠️ ملاحظة لضمان الاتصال: تأكد من لوحة Atlas أن Network Access مسموح لـ 0.0.0.0/0
-let MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
-
-// إجبار الرابط على استخدام قاعدة more مباشرة بدلاً من test أو الافتراضية في أي بيئة تشغيل (Vercel أو محلياً)
-if (MONGODB_URI && MONGODB_URI.includes('mongodb')) {
-  MONGODB_URI = MONGODB_URI.replace(/(\.mongodb\.net|\.com|\.org|\.io|[0-9]+)\/([a-zA-Z0-9_-]*)(\?|$)/, "$1/more$3");
-  if (!MONGODB_URI.includes('/more') && !MONGODB_URI.includes('?')) {
-    MONGODB_URI += '/more';
-  }
-}
-
-// معالج ذاتي لترميز حرف @ في حال وجوده في كلمة المرور (Auto-Heal)
-if (MONGODB_URI && MONGODB_URI.includes('://')) {
+// 💡 دالة متطورة لإعادة صياغة رابط الاتصال وضمان توجيهه دائماً إلى قاعدة بيانات 'more'
+function formatMongoUri(rawUri: string, targetDb: string = 'more'): string {
+  if (!rawUri) return rawUri;
   try {
-    const protocolSplit = MONGODB_URI.split('://');
-    const protocol = protocolSplit[0];
-    const remaining = protocolSplit[1];
-    const lastAtIndex = remaining.lastIndexOf('@');
-    if (lastAtIndex !== -1) {
-      const credentials = remaining.substring(0, lastAtIndex);
-      const rest = remaining.substring(lastAtIndex);
-      const firstColonIndex = credentials.indexOf(':');
-      if (firstColonIndex !== -1) {
-        const user = credentials.substring(0, firstColonIndex);
-        const pass = credentials.substring(firstColonIndex + 1);
-        if (pass.includes('@')) {
-          const encodedPass = pass.replace(/@/g, '%40');
-          MONGODB_URI = `${protocol}://${user}:${encodedPass}${rest}`;
+    let uri = rawUri.trim();
+
+    // 1. معالجة كلمة المرور إذا احتوت على علامة @
+    const protoIndex = uri.indexOf('://');
+    if (protoIndex !== -1) {
+      const protocol = uri.substring(0, protoIndex + 3);
+      const remaining = uri.substring(protoIndex + 3);
+      const lastAtIndex = remaining.lastIndexOf('@');
+      if (lastAtIndex !== -1) {
+        const credentials = remaining.substring(0, lastAtIndex);
+        const rest = remaining.substring(lastAtIndex);
+        const firstColonIndex = credentials.indexOf(':');
+        if (firstColonIndex !== -1) {
+          const user = credentials.substring(0, firstColonIndex);
+          const pass = credentials.substring(firstColonIndex + 1);
+          if (pass.includes('@') && !pass.includes('%40')) {
+            const encodedPass = pass.replace(/@/g, '%40');
+            uri = `${protocol}${user}:${encodedPass}${rest}`;
+          }
         }
       }
     }
+
+    // 2. فك وفصل الاستعلامات ?
+    const queryIndex = uri.indexOf('?');
+    let base = queryIndex !== -1 ? uri.substring(0, queryIndex) : uri;
+    const query = queryIndex !== -1 ? uri.substring(queryIndex) : '';
+
+    base = base.replace(/\/+$/, ''); // إزالة الشرطات المائلة في النهاية
+
+    const pIdx = base.indexOf('://');
+    if (pIdx === -1) return uri;
+
+    const protocolPart = base.substring(0, pIdx + 3);
+    const restPart = base.substring(pIdx + 3);
+
+    const firstSlashIndex = restPart.indexOf('/');
+    let hostPart = restPart;
+    if (firstSlashIndex !== -1) {
+      hostPart = restPart.substring(0, firstSlashIndex);
+    }
+
+    // إعادة بناء الرابط مستهدفاً قاعدة البيانات 'more' حصرياً
+    return `${protocolPart}${hostPart}/${targetDb}${query}`;
   } catch (err) {
-    console.error("Error healing MONGODB_URI:", err);
+    console.error("Error formatting MONGODB_URI:", err);
+    return rawUri;
   }
 }
+
+const DEFAULT_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
+let MONGODB_URI = formatMongoUri(process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGODB_URI, 'more');
 
 // التخزين المؤقت للاتصال لبيئات Vercel Serverless
 let cached = (global as any).mongoose;
@@ -53,26 +73,31 @@ if (!cached) {
 let lastDbError: any = null;
 
 async function connectToDatabase() {
+  const currentRawUri = process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGODB_URI;
+  const targetUri = formatMongoUri(currentRawUri, 'more');
+
   if (cached.conn && mongoose.connection.readyState === 1) {
-    const currentDb = mongoose.connection.db?.databaseName || '';
+    const currentDb = mongoose.connection.db?.databaseName;
     if (currentDb === 'more') {
       return cached.conn;
-    } else {
-      console.warn(`⚠️ Cached connection is on database '${currentDb}' instead of 'more'. Reconnecting to 'more'...`);
+    } else if (currentDb) {
+      console.warn(`⚠️ Connection is active on db '${currentDb}' instead of 'more'. Reconnecting to 'more'...`);
       await mongoose.disconnect();
       cached.conn = null;
       cached.promise = null;
     }
   }
+
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
       serverSelectionTimeoutMS: 5000,
-      dbName: 'more', // الاتصال المباشر بقاعدة more
+      dbName: 'more', // التأكيد القاطع على استخدام قاعدة البيانات 'more'
     };
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(targetUri, opts).then((mongooseInstance) => {
       lastDbError = null;
-      console.log("🔌 Connected to MongoDB Atlas successfully on db: more");
+      const connectedDb = mongoose.connection.db?.databaseName || 'more';
+      console.log(`🔌 Connected to MongoDB Atlas successfully on database: ${connectedDb}`);
       return mongooseInstance;
     }).catch((error) => {
       cached.promise = null;
@@ -81,16 +106,9 @@ async function connectToDatabase() {
       throw error;
     });
   }
+
   try {
     cached.conn = await cached.promise;
-    const currentDb = mongoose.connection.db?.databaseName || '';
-    if (currentDb && currentDb !== 'more') {
-      console.warn(`⚠️ Connection resolved to '${currentDb}'. Forcing dbName to 'more'...`);
-      await mongoose.disconnect();
-      cached.conn = null;
-      cached.promise = null;
-      return connectToDatabase();
-    }
     return cached.conn;
   } catch (e: any) {
     cached.promise = null;
