@@ -182,65 +182,9 @@ const ChatMessageSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now, index: true }
 });
 
-const getUserModel = () => {
-  const db = mongoose.connection.useDb('more', { useCache: true });
-  return db.models.User || db.model('User', UserSchema);
-};
-
-const getTransactionModel = () => {
-  const db = mongoose.connection.useDb('more', { useCache: true });
-  return db.models.Transaction || db.model('Transaction', TransactionSchema);
-};
-
-const getChatMessageModel = () => {
-  const db = mongoose.connection.useDb('more', { useCache: true });
-  return db.models.ChatMessage || db.model('ChatMessage', ChatMessageSchema);
-};
-
-const User: any = new Proxy(function() {}, {
-  construct(target, args) {
-    const Model = getUserModel();
-    return new (Model as any)(...args);
-  },
-  get(target, prop) {
-    const Model = getUserModel();
-    const val = (Model as any)[prop];
-    if (typeof val === 'function') {
-      return val.bind(Model);
-    }
-    return val;
-  }
-});
-
-const Transaction: any = new Proxy(function() {}, {
-  construct(target, args) {
-    const Model = getTransactionModel();
-    return new (Model as any)(...args);
-  },
-  get(target, prop) {
-    const Model = getTransactionModel();
-    const val = (Model as any)[prop];
-    if (typeof val === 'function') {
-      return val.bind(Model);
-    }
-    return val;
-  }
-});
-
-const ChatMessage: any = new Proxy(function() {}, {
-  construct(target, args) {
-    const Model = getChatMessageModel();
-    return new (Model as any)(...args);
-  },
-  get(target, prop) {
-    const Model = getChatMessageModel();
-    const val = (Model as any)[prop];
-    if (typeof val === 'function') {
-      return val.bind(Model);
-    }
-    return val;
-  }
-});
+const User: any = mongoose.models.User || mongoose.model('User', UserSchema);
+const Transaction: any = mongoose.models.Transaction || mongoose.model('Transaction', TransactionSchema);
+const ChatMessage: any = mongoose.models.ChatMessage || mongoose.model('ChatMessage', ChatMessageSchema);
 
 // ============================================================================
 // 3. EXPRESS APPLICATION SETUP & ENDPOINTS
@@ -270,6 +214,10 @@ app.post('/api/auth/sync', ensureDb, async (req: Request, res: Response) => {
       res.status(400).json({ error: "Missing required parameters: uid and email" });
       return;
     }
+
+    const adminEmails = ['elalyzead@gmail.com', 'aymanaamer979@gmail.com'];
+    const assignedRole = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
+
     let user = await User.findOne({ uid });
     if (!user) {
       user = new User({
@@ -277,6 +225,7 @@ app.post('/api/auth/sync', ensureDb, async (req: Request, res: Response) => {
         email,
         displayName: displayName || email.split('@')[0],
         photoURL: photoURL || '',
+        role: assignedRole,
         balance: 35, // مكافأة التسجيل الترحيبية
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -292,6 +241,12 @@ app.post('/api/auth/sync', ensureDb, async (req: Request, res: Response) => {
         createdAt: new Date()
       });
       await initialReward.save();
+    } else {
+      // إذا كان الإيميل خاص بالأدمن ويوجد دور user، يتم ترقيته فوراً لأدمن
+      if (adminEmails.includes(email.toLowerCase()) && user.role !== 'admin') {
+        user.role = 'admin';
+        await user.save();
+      }
     }
     res.json(user);
   } catch (error: any) {
