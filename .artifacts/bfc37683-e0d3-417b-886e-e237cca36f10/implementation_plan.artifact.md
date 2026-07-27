@@ -1,46 +1,43 @@
-# خطة توحيد مسارات القراءة والكتابة في قاعدة البيانات (Service Layer)
+# خطة ضبط استدعاءات Firebase Admin وتفعيل الأمان
 
-تهدف هذه الخطة إلى مركزية كافة عمليات الوصول لقاعدة البيانات (MongoDB) في طبقة "خدمات" (Services) مستقلة. هذا يضمن أن أي عملية (مثل تحديث الرصيد) تتم بنفس الطريقة والتحقق سواء قام بها المستخدم أو الأدمن.
+بناءً على توضيحك، سنقوم بضبط طريقة استدعاء ملف السيرفس (Service Account) ليعمل بسلاسة مع متغير البيئة `FIREBASE_SERVICE_ACCOUNT` الذي أعددته، بالإضافة إلى تحديث سكريبت `set-admin.js` ليكون أكثر مرونة.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **مركزية منطق العمليات المالية**: سنقوم بإنشاء دوال موحدة لتعديل الأرصدة. أي تعديل في الرصيد سيقوم آلياً بإنشاء سجل في جدول المعاملات (`Transactions`) لضمان الشفافية وقابلية التتبع.
->
-> **تنبيه**: هذه التغييرات داخلية في الباك اند ولن تغير المسارات (URLs) التي يستخدمها الفرونت اند حالياً، لضمان عدم تعطل التطبيق.
+> **ملاحظة حول مفتاح الخصوصية**: مفتاح `private_key` في فيرباس غالباً ما يحتوي على رموز سطر جديد (`\n`). عند وضعه كمتغير بيئة في فيرسل، قد يتم تفسيره بشكل خاطئ. سأقوم بإضافة كود لمعالجة هذا الأمر تلقائياً لضمان نجاح الاتصال.
 
 ## Proposed Changes
 
-### 1. إنشاء طبقة الخدمات (Services)
+### 1. تحسين تهيئة الباك اند (Backend Initialization)
 
-سنقوم بإنشاء المجلد `backend/services` ونقل منطق Mongoose إليه:
+#### [MODIFY] [firebase.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/config/firebase.ts)
+- تعديل الكود ليقوم بقراءة `FIREBASE_SERVICE_ACCOUNT` من متغيرات البيئة.
+- معالجة الـ `private_key` لاستبدال `\\n` بـ `\n` الحقيقية لضمان قبول فيرباس للمفتاح.
 
-#### [NEW] [userService.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/services/userService.ts)
-- `getUserByUid(uid: string)`: جلب بيانات المستخدم مع ضمان تنسيق الأرقام.
-- `updateProfile(uid: string, data: any)`: تحديث البيانات الشخصية (الاسم، الهاتف).
-- `updateBalance(uid: string, amount: number, type: string, description: string)`: الدالة الأهم؛ تقوم بتحديث الرصيد وإنشاء سجل معاملة في خطوة واحدة (Atomic operation if possible).
+### 2. تحديث سكريبت الإدارة (Admin Script)
 
-#### [NEW] [transactionService.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/services/transactionService.ts)
-- `createTransaction(data: any)`: إنشاء سجل معاملة جديد.
-- `updateTransactionStatus(id: string, status: string, adminNote: string)`: تحديث حالة المعاملة وتعديل رصيد المستخدم المرتبط بها آلياً.
+#### [MODIFY] [set-admin.js](file:///C:/Users/alfaa/Desktop/getProject/set-admin.js)
+- جعله يحاول القراءة من ملف `serviceAccountKey.json` محلياً أولاً، وإذا لم يجده يحاول القراءة من متغيرات البيئة. هذا يسمح لك بتشغيله في أي بيئة.
 
-### 2. إعادة هيكلة الـ Controllers
+### 3. ربط التوكن في الفرونت اند (Frontend Token Integration)
 
-تحديث `userController.ts` و `adminController.ts` لاستخدام هذه الخدمات بدلاً من مناداة `User` أو `Transaction` مباشرة.
+#### [MODIFY] [api.js](file:///C:/Users/alfaa/Desktop/getProject/src/lib/api.js)
+- تحديث جميع استدعاءات الـ API لتجلب التوكن الحالي من Firebase Auth وتضعه في الـ Header كـ `Bearer Token`.
 
-- **الفائدة**: إذا قررنا مستقبلاً تغيير طريقة حساب الأرباح، سنغيرها في مكان واحد فقط (`userService`) بدلاً من البحث في كل الملفات.
+### 4. تفعيل الحماية (Security Activation)
 
-### 3. توحيد الردود (API Responses)
-
-ضمان أن جميع الـ APIs تعيد البيانات بنفس التنسيق (JSON structure) لتسهيل العمل على الفرونت اند.
+#### [MODIFY] [userRoutes.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/routes/userRoutes.ts)
+#### [MODIFY] [adminRoutes.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/routes/adminRoutes.ts)
+- ربط الـ `authMiddleware` بشكل فعلي لمنع أي وصول غير مصرح به.
 
 ---
 
 ## Verification Plan
 
 ### Automated Tests
-- اختبار تحديث الرصيد من جهة المستخدم (سحب/إيداع) والتأكد من ظهورها في لوحة الأدمن بنفس اللحظة.
-- اختبار تعديل الأدمن لرصيد مستخدم والتأكد من نشوء سجل معاملة تلقائي.
+- تشغيل `set-admin.js` والتأكد من نجاحه في الاتصال عبر متغير البيئة.
+- اختبار مسار `/api/db-status` للتأكد من أن الباك اند يعمل بدون أخطاء في التهيئة.
 
 ### Manual Verification
-- مراقبة سجلات MongoDB Atlas للتأكد من عدم وجود بيانات مكررة أو مسارات مختلفة للكتابة.
+- تسجيل الدخول من الواجهة والتأكد من أن بيانات المستخدم تظهر (مما يعني نجاح الـ Sync والتوكن).

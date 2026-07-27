@@ -1,26 +1,14 @@
-# مهام تطوير وتنظيم الباك اند
+# مهام تفعيل الأمان وضبط استدعاءات فيرباس
 
-- `[x]` إعداد الهيكلية الأساسية والاتصال
-    - `[x]` إنشاء المجلدات (`config`, `models`, `controllers`, `routes`, `middleware`)
-    - `[x]` إنشاء ملف اتصال قاعدة البيانات `backend/config/db.ts`
-- `[x]` نقل المخططات (Models)
-    - `[x]` إنشاء `backend/models/User.ts`
-    - `[x]` إنشاء `backend/models/Transaction.ts`
-    - `[x]` إنشاء `backend/models/ChatMessage.ts`
-- `[x]` إعداد المصادقة والأمان
-    - `[x]` تثبيت `firebase-admin`
-    - `[x]` إنشاء `backend/middleware/authMiddleware.ts`
-- `[x]` تقسيم المنطق البرمجي (Controllers & Routes)
-    - `[x]` إعداد مسارات المستخدم `backend/routes/userRoutes.ts`
-    - `[x]` إعداد مسارات الإدارة `backend/routes/adminRoutes.ts`
-    - `[x]` إعداد مسارات المصادقة `backend/routes/authRoutes.ts`
-- `[x]` تحديث ملف `server.ts` الأساسي
-    - `[x]` ربط جميع المسارات الجديدة
-    - `[x]` تنظيف الكود القديم
-- `[x]` التحقق والاختبار
-    - `[x]` التأكد من عمل الاتصال بقاعدة البيانات
-    - `[x]` التأكد من عمل الـ APIs بشكل صحيح من الفرونت اند
-- `[x]` توحيد مسارات القراءة والكتابة (Service Layer)
-    - `[x]` إنشاء `backend/services/userService.ts`
-    - `[x]` إنشاء `backend/services/transactionService.ts`
-    - `[x]` إعادة هيكلة الـ Controllers لاستخدام الخدمات
+- `[/]` ضبط تهيئة Firebase Admin
+    - `[ ]` تحديث `backend/config/firebase.ts` لمعالجة مفتاح الخصوصية
+    - `[ ]` تحديث سكريبت `set-admin.js` لدعم متغيرات البيئة
+- `[ ]` ربط المصادقة في الفرونت اند
+    - `[ ]` تحديث `src/lib/api.js` لإرسال التوكن في الـ Headers
+    - `[ ]` تعديل `AuthContext.jsx` لضمان تحديث التوكن عند الحاجة
+- `[ ]` تفعيل الحماية في الباك اند
+    - `[ ]` تفعيل `authMiddleware` في `userRoutes.ts`
+    - `[ ]` إضافة تحقق الرتبة (Admin Check) في `adminRoutes.ts`
+- `[ ]` التحقق والاختبار
+    - `[ ]` اختبار تسجيل الدخول والمزامنة
+    - `[ ]` اختبار صلاحيات الأدمن

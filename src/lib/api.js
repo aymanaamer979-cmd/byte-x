@@ -3,8 +3,28 @@
  * Communicates with the MongoDB Atlas database on the backend.
  */
 
+import { auth } from '../config/firebase';
+
 // We use relative paths so that it works seamlessly under the same origin (both on Vercel and locally)
 const BASE_URL = '/api';
+
+/**
+ * دالة مساعدة لجلب الـ ID Token من Firebase وإعداد الـ Headers
+ */
+async function getHeaders(extraHeaders = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    ...extraHeaders
+  };
+
+  const user = auth.currentUser;
+  if (user) {
+    const token = await user.getIdToken();
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return headers;
+}
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -34,7 +54,7 @@ export const api = {
   async syncUser({ uid, email, displayName, photoURL }) {
     const response = await fetch(`${BASE_URL}/auth/sync`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ uid, email, displayName, photoURL })
     });
     return handleResponse(response);
@@ -42,14 +62,16 @@ export const api = {
 
   // --- USER PROFILE ---
   async getUserProfile(uid) {
-    const response = await fetch(`${BASE_URL}/user/profile/${uid}`);
+    const response = await fetch(`${BASE_URL}/user/profile/${uid}`, {
+      headers: await getHeaders()
+    });
     return handleResponse(response);
   },
 
   async updatePhone(uid, phone) {
     const response = await fetch(`${BASE_URL}/user/update-phone`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ uid, phone })
     });
     return handleResponse(response);
@@ -58,7 +80,7 @@ export const api = {
   async updateProfile(uid, { displayName, phone }) {
     const response = await fetch(`${BASE_URL}/user/update-profile`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ uid, displayName, phone })
     });
     return handleResponse(response);
@@ -67,7 +89,7 @@ export const api = {
   async updatePresence(uid, isOnline) {
     const response = await fetch(`${BASE_URL}/user/presence`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ uid, isOnline })
     });
     return handleResponse(response);
@@ -77,7 +99,7 @@ export const api = {
   async submitDeposit(uid, amount, description) {
     const response = await fetch(`${BASE_URL}/user/deposit`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ uid, amount, description })
     });
     return handleResponse(response);
@@ -86,27 +108,31 @@ export const api = {
   async submitWithdraw(uid, amount, description) {
     const response = await fetch(`${BASE_URL}/user/withdraw`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ uid, amount, description })
     });
     return handleResponse(response);
   },
 
   async getUserTransactions(uid) {
-    const response = await fetch(`${BASE_URL}/user/transactions/${uid}`);
+    const response = await fetch(`${BASE_URL}/user/transactions/${uid}`, {
+      headers: await getHeaders()
+    });
     return handleResponse(response);
   },
 
   // --- CHAT SUPPORT ---
   async getChatMessages(uid) {
-    const response = await fetch(`${BASE_URL}/chat/messages/${uid}`);
+    const response = await fetch(`${BASE_URL}/chat/messages/${uid}`, {
+      headers: await getHeaders()
+    });
     return handleResponse(response);
   },
 
   async sendChatMessage({ userId, senderId, senderName, text, isAdmin }) {
     const response = await fetch(`${BASE_URL}/chat/send`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ userId, senderId, senderName, text, isAdmin })
     });
     return handleResponse(response);
@@ -114,19 +140,23 @@ export const api = {
 
   // --- ADMIN PANEL FUNCTIONS ---
   async adminGetUsers() {
-    const response = await fetch(`${BASE_URL}/admin/users`);
+    const response = await fetch(`${BASE_URL}/admin/users`, {
+      headers: await getHeaders()
+    });
     return handleResponse(response);
   },
 
   async adminGetUser(uid) {
-    const response = await fetch(`${BASE_URL}/admin/user/${uid}`);
+    const response = await fetch(`${BASE_URL}/admin/user/${uid}`, {
+      headers: await getHeaders()
+    });
     return handleResponse(response);
   },
 
   async adminUpdateFinancials(uid, { balance, investments, profits, isVerified, depositBonus, depositBonusDate }) {
     const response = await fetch(`${BASE_URL}/admin/user/${uid}/update-financials`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ balance, investments, profits, isVerified, depositBonus, depositBonusDate })
     });
     return handleResponse(response);
@@ -135,7 +165,7 @@ export const api = {
   async adminCreateOrEditTransaction(uid, { txId, amount, type, status, description, createdAt }) {
     const response = await fetch(`${BASE_URL}/admin/user/${uid}/transaction`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ txId, amount, type, status, description, createdAt })
     });
     return handleResponse(response);
@@ -143,7 +173,8 @@ export const api = {
 
   async adminDeleteTransaction(uid, txId) {
     const response = await fetch(`${BASE_URL}/admin/user/${uid}/transaction/${txId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: await getHeaders()
     });
     return handleResponse(response);
   },
@@ -151,7 +182,7 @@ export const api = {
   async adminUpdateStatus(uid, role) {
     const response = await fetch(`${BASE_URL}/admin/user/${uid}/update-status`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await getHeaders(),
       body: JSON.stringify({ role })
     });
     return handleResponse(response);

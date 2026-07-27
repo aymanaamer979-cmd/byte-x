@@ -2,19 +2,32 @@ import admin from 'firebase-admin';
 
 if (!admin.apps.length) {
   try {
-    // محاولة البحث عن متغير بيئة يحتوي على JSON الخاص بـ Service Account
-    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;
+
+    if (serviceAccountVar) {
+      let serviceAccount;
+      try {
+        serviceAccount = JSON.parse(serviceAccountVar);
+        // إصلاح مشكلة رموز سطر جديد في المفتاح الخاص عند استخدامه كمتغير بيئة
+        if (serviceAccount.private_key) {
+          serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+        }
+      } catch (e) {
+        console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", e);
+        throw e;
+      }
+
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount)
       });
+      console.log("🔥 Firebase Admin initialized via Environment Variable");
     } else {
-      // في حال عدم وجوده، يمكن استخدام الاعتمادات التلقائية للبيئة (مثل Vercel أو Google Cloud)
+      // محاولة استخدام الاعتمادات التلقائية إذا لم يوجد متغير البيئة
       admin.initializeApp({
         credential: admin.credential.applicationDefault()
       });
+      console.log("🔥 Firebase Admin initialized via Application Default Credentials");
     }
-    console.log("🔥 Firebase Admin initialized");
   } catch (error) {
     console.error("❌ Firebase Admin initialization error:", error);
   }

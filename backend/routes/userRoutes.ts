@@ -5,7 +5,7 @@ import { ensureDb, authMiddleware } from '../middleware/authMiddleware';
 const router = Router();
 
 router.use(ensureDb);
-// router.use(authMiddleware); // يمكن تفعيله لاحقاً عند جاهزية الفرونت اند لإرسال التوكن
+router.use(authMiddleware); // تم التفعيل الآن لضمان الأمان
 
 router.get('/profile/:uid', userController.getProfile);
 router.post('/update-profile', userController.updateProfile);
