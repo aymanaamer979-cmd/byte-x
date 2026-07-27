@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import * as adminController from '../controllers/adminController';
-import { ensureDb } from '../middleware/authMiddleware';
+import { ensureDb, authMiddleware, adminOnly } from '../middleware/authMiddleware';
 
 const router = Router();
 
 router.use(ensureDb);
+router.use(authMiddleware);
+router.use(adminOnly);
 
 router.get('/users', adminController.getAllUsers);
 router.get('/stats', adminController.getUserStats);

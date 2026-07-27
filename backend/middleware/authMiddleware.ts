@@ -25,6 +25,13 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
+export const adminOnly = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (!req.user || req.user.admin !== true) {
+    return res.status(403).json({ error: 'Forbidden', message: 'عذراً، هذه الصلاحية للمدراء فقط' });
+  }
+  next();
+};
+
 export const ensureDb = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await connectToDatabase();
