@@ -53,7 +53,17 @@ if (!cached) {
 let lastDbError: any = null;
 
 async function connectToDatabase() {
-  if (cached.conn) return cached.conn;
+  if (cached.conn && mongoose.connection.readyState === 1) {
+    const currentDb = mongoose.connection.db?.databaseName || '';
+    if (currentDb === 'more') {
+      return cached.conn;
+    } else {
+      console.warn(`⚠️ Cached connection is on database '${currentDb}' instead of 'more'. Reconnecting to 'more'...`);
+      await mongoose.disconnect();
+      cached.conn = null;
+      cached.promise = null;
+    }
+  }
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
@@ -62,7 +72,7 @@ async function connectToDatabase() {
     };
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
       lastDbError = null;
-      console.log("🔌 Connected to MongoDB Atlas successfully.");
+      console.log("🔌 Connected to MongoDB Atlas successfully on db: more");
       return mongooseInstance;
     }).catch((error) => {
       cached.promise = null;
@@ -73,6 +83,14 @@ async function connectToDatabase() {
   }
   try {
     cached.conn = await cached.promise;
+    const currentDb = mongoose.connection.db?.databaseName || '';
+    if (currentDb && currentDb !== 'more') {
+      console.warn(`⚠️ Connection resolved to '${currentDb}'. Forcing dbName to 'more'...`);
+      await mongoose.disconnect();
+      cached.conn = null;
+      cached.promise = null;
+      return connectToDatabase();
+    }
     return cached.conn;
   } catch (e: any) {
     cached.promise = null;
