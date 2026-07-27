@@ -6,7 +6,7 @@ admin.initializeApp({
 });
 
 // حط الـ UID بتاع حسابك هنا (بتجيبه من صفحة Authentication في Firebase)
-const targetUid = '2Yi3kkmel5TKJjaPZpT6ugq4aSI3';
+const targetUid = 'fE1IwnCPqjbqwtYEkba07XVmYGe2';
 
 admin.auth().setCustomUserClaims(targetUid, { admin: true })
   .then(() => {
