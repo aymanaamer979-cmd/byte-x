@@ -12,6 +12,14 @@ import cors from 'cors';
 // ⚠️ ملاحظة لضمان الاتصال: تأكد من لوحة Atlas أن Network Access مسموح لـ 0.0.0.0/0
 let MONGODB_URI = process.env.MONGODB_URI || process.env.DATABASE_URL || "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
 
+// إجبار الرابط على استخدام قاعدة more مباشرة بدلاً من test أو الافتراضية في أي بيئة تشغيل (Vercel أو محلياً)
+if (MONGODB_URI && MONGODB_URI.includes('mongodb')) {
+  MONGODB_URI = MONGODB_URI.replace(/(\.mongodb\.net|\.com|\.org|\.io|[0-9]+)\/([a-zA-Z0-9_-]*)(\?|$)/, "$1/more$3");
+  if (!MONGODB_URI.includes('/more') && !MONGODB_URI.includes('?')) {
+    MONGODB_URI += '/more';
+  }
+}
+
 // معالج ذاتي لترميز حرف @ في حال وجوده في كلمة المرور (Auto-Heal)
 if (MONGODB_URI && MONGODB_URI.includes('://')) {
   try {
@@ -159,7 +167,8 @@ app.use(express.json());
 app.get('/api/db-status', async (req: Request, res: Response) => {
   const conn = await connectToDatabase();
   if (conn && mongoose.connection.readyState === 1) {
-    res.json({ status: "connected", database: "MongoDB Atlas (more)" });
+    const activeDbName = mongoose.connection.db?.databaseName || 'more';
+    res.json({ status: "connected", database: `MongoDB Atlas (${activeDbName})`, dbName: activeDbName });
   } else {
     res.status(500).json({ status: "disconnected", error: lastDbError?.message || "Unknown error" });
   }
