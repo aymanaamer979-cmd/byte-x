@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
-import { Transaction } from '../models/Transaction';
+import { userService } from '../services/userService';
+import { transactionService } from '../services/transactionService';
 import { currencySetter } from '../config/db';
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const users = await userService.getAllUsers();
     res.json(users);
   } catch (error: any) {
     res.status(500).json({ error: "Admin get users error", details: error.message });
@@ -43,6 +44,8 @@ export const updateFinancials = async (req: Request, res: Response) => {
     const { uid } = req.params;
     const { balance, investments, profits, depositBonus, depositBonusDate, isVerified, role } = req.body;
 
+    // في حالة التعديل المالي المباشر من الأدمن، نقوم بتحديث الحساب
+    // ملاحظة: الأدمن هنا يقوم بـ "تحديد القيمة" وليس "إضافة/خصم"، لذا سنتعامل معها كـ Manual Update
     const updateData: any = { updatedAt: new Date() };
     if (balance !== undefined) updateData.balance = currencySetter(Number(balance));
     if (investments !== undefined) updateData.investments = currencySetter(Number(investments));
@@ -61,7 +64,7 @@ export const updateFinancials = async (req: Request, res: Response) => {
 
 export const getAllTransactions = async (req: Request, res: Response) => {
   try {
-    const txs = await Transaction.find({}).sort({ createdAt: -1 }).limit(200);
+    const txs = await transactionService.getAllTransactions();
     res.json(txs);
   } catch (error: any) {
     res.status(500).json({ error: "Admin get transactions error", details: error.message });
@@ -73,20 +76,7 @@ export const updateTransactionStatus = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status, adminNote } = req.body;
 
-    const tx = await Transaction.findById(id);
-    if (!tx) return res.status(404).json({ error: "Transaction not found" });
-
-    const oldStatus = tx.status;
-    tx.status = status;
-    if (adminNote) tx.description = `${tx.description} [${adminNote}]`;
-    await tx.save();
-
-    if (oldStatus !== 'completed' && status === 'completed' && tx.type === 'deposit') {
-      await User.findOneAndUpdate({ uid: tx.userId }, { $inc: { balance: tx.amount } });
-    } else if (oldStatus === 'pending' && ['failed', 'suspended'].includes(status) && tx.type === 'withdraw') {
-      await User.findOneAndUpdate({ uid: tx.userId }, { $inc: { balance: tx.amount } });
-    }
-
+    const tx = await transactionService.updateStatus(id, status, adminNote);
     res.json({ success: true, transaction: tx });
   } catch (error: any) {
     res.status(500).json({ error: "Admin update tx status error", details: error.message });
