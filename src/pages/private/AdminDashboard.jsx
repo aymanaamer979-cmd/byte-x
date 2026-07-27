@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
+import { auth } from '../../config/firebase'; // إضافة استيراد auth
 import './AdminDashboard.css';
 
 function AdminDashboard() {
@@ -11,14 +12,41 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [isAuthorized, setIsAuthorized] = useState(null);
 
-  // فحص صلاحية الأدمن
+  const [error, setError] = useState(null);
+
+  // فحص صلاحية الأدمن بشكل أكثر قوة (فحص الداتابيز والتوكن)
   useEffect(() => {
-    if (userDataLoading) return;
-    if (currentUser && userData?.role === 'admin') {
-      setIsAuthorized(true);
-    } else {
-      setIsAuthorized(false);
-    }
+    const checkAccess = async () => {
+      if (userDataLoading) return;
+
+      // 1. فحص الرتبة من قاعدة البيانات
+      if (currentUser && userData?.role === 'admin') {
+        setIsAuthorized(true);
+        return;
+      }
+
+      // 2. فحص الـ Custom Claims من التوكن كخيار احتياطي أو للتأكد
+      try {
+        const idTokenResult = await currentUser.getIdTokenResult();
+        if (idTokenResult.claims.admin) {
+          setIsAuthorized(true);
+          // إذا كان أدمن في فيرباس وليس في الداتابيز، نقوم بعمل مزامنة لتحديث الرتبة
+          api.syncUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL
+          });
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch (err) {
+        console.error('Error checking admin claims:', err);
+        setIsAuthorized(false);
+      }
+    };
+
+    checkAccess();
   }, [currentUser, userData, userDataLoading]);
 
   // جلب قائمة المستخدمين من الـ API
@@ -33,15 +61,19 @@ function AdminDashboard() {
         if (isMounted) {
           // تهيئة id من _id لدعم التوافق
           const formatted = userList.map(u => ({
-            id: u.uid,
+            id: u.uid || u._id,
             ...u
           }));
           setUsers(formatted);
           setLoading(false);
+          setError(null);
         }
-      } catch (error) {
-        console.error('❌ خطأ في جلب المستخدمين:', error);
-        if (isMounted) setLoading(false);
+      } catch (err) {
+        console.error('❌ خطأ في جلب المستخدمين:', err);
+        if (isMounted) {
+          setError(err.message || 'فشل في جلب بيانات المستثمرين');
+          setLoading(false);
+        }
       }
     };
 
@@ -116,7 +148,17 @@ function AdminDashboard() {
   if (userDataLoading || isAuthorized === null) {
     return (
       <div className="admin-dashboard-page">
-        <div className="admin-loading">جاري التحقق من صلاحيات لوحة التحكم...</div>
+        <div className="admin-loading">
+          جاري التحقق من صلاحيات لوحة التحكم...
+          <br />
+          <span style={{ fontSize: '12px', opacity: 0.7 }}>تأكد من تسجيل الدخول بحساب المدير</span>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ marginTop: '10px', display: 'block', padding: '5px 15px', background: '#333', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            إعادة تحميل الصفحة
+          </button>
+        </div>
       </div>
     );
   }
@@ -124,8 +166,16 @@ function AdminDashboard() {
   if (isAuthorized === false) {
     return (
       <div className="admin-dashboard-page">
-        <div className="admin-loading" style={{ color: 'red' }}>
-          عذراً، ليس لديك صلاحية للوصول إلى هذه الصفحة.
+        <div className="admin-loading" style={{ color: '#ff4d4d' }}>
+          <h2>🚫 وصول مرفوض</h2>
+          <p>عذراً، ليس لديك صلاحية للوصول إلى هذه الصفحة.</p>
+          <p style={{ fontSize: '14px' }}>إذا كنت قد حصلت على الصلاحية للتو، يرجى تسجيل الخروج ثم الدخول مرة أخرى لتحديث تصريح الدخول.</p>
+          <button
+            onClick={() => auth.signOut()}
+            style={{ marginTop: '20px', padding: '10px 20px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+          >
+            تسجيل الخروج وتحديث البيانات
+          </button>
         </div>
       </div>
     );
@@ -164,6 +214,19 @@ function AdminDashboard() {
 
         {/* الجدول الرئيسي للمستخدمين */}
         <div className="admin-table-wrap">
+          {error && (
+            <div className="admin-error-banner" style={{
+              background: '#fee2e2',
+              color: '#b91c1c',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              textAlign: 'center',
+              fontWeight: '600'
+            }}>
+              ⚠️ {error}
+            </div>
+          )}
           {loading ? (
             <div className="admin-loading">جاري تحميل المستثمرين...</div>
           ) : (

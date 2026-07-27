@@ -7,13 +7,17 @@ if (!admin.apps.length) {
     if (serviceAccountVar) {
       let serviceAccount;
       try {
-        serviceAccount = JSON.parse(serviceAccountVar);
-        // إصلاح مشكلة رموز سطر جديد في المفتاح الخاص عند استخدامه كمتغير بيئة
+        // تنظيف متغير البيئة من أي مسافات زائدة أو علامات اقتباس خارجية قد تضيفها بعض المنصات
+        const cleanJson = serviceAccountVar.trim().replace(/^['"]|['"]$/g, '');
+        serviceAccount = JSON.parse(cleanJson);
+
+        // إصلاح مشكلة رموز سطر جديد في المفتاح الخاص
         if (serviceAccount.private_key) {
           serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
         }
       } catch (e) {
-        console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", e);
+        console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON. Error:", e);
+        console.error("Raw value starts with:", serviceAccountVar.substring(0, 50));
         throw e;
       }
 

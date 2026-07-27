@@ -69,10 +69,10 @@ export const userService = {
     return { transaction: tx };
   },
 
-  async syncUser(data: { uid: string, email: string, displayName?: string, photoURL?: string }) {
-    const { uid, email, displayName, photoURL } = data;
+  async syncUser(data: { uid: string, email: string, displayName?: string, photoURL?: string, isAdminClaim?: boolean }) {
+    const { uid, email, displayName, photoURL, isAdminClaim = false } = data;
     const adminEmails = ['elalyzead@gmail.com', 'aymanaamer979@gmail.com'];
-    const assignedRole = adminEmails.includes(email.toLowerCase()) ? 'admin' : 'user';
+    const assignedRole = (adminEmails.includes(email.toLowerCase()) || isAdminClaim) ? 'admin' : 'user';
 
     let user = await User.findOne({ uid });
     if (!user) {
@@ -95,9 +95,12 @@ export const userService = {
         description: 'هدية ترحيبية عند التسجيل',
         status: 'completed'
       });
-    } else if (adminEmails.includes(email.toLowerCase()) && user.role !== 'admin') {
-      user.role = 'admin';
-      await user.save();
+    } else {
+      // تحديث الرتبة إذا تغيرت في فيرباس أو إذا كان في قائمة الإيميلات
+      if (user.role !== assignedRole) {
+        user.role = assignedRole;
+        await user.save();
+      }
     }
     return user;
   }
