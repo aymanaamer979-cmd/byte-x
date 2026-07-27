@@ -1,6 +1,6 @@
 {
-  "name": "Byte X Platform",
-  "description": "منصة الاستثمار والخدمات المالية المبتكرة",
+  "name": "Byte-X",
+  "description": "Financial Investment Platform and Asset Management System",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
