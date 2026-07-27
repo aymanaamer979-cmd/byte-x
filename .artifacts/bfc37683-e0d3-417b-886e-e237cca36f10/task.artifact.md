@@ -1,0 +1,22 @@
+# مهام تطوير وتنظيم الباك اند
+
+- `[x]` إعداد الهيكلية الأساسية والاتصال
+    - `[x]` إنشاء المجلدات (`config`, `models`, `controllers`, `routes`, `middleware`)
+    - `[x]` إنشاء ملف اتصال قاعدة البيانات `backend/config/db.ts`
+- `[x]` نقل المخططات (Models)
+    - `[x]` إنشاء `backend/models/User.ts`
+    - `[x]` إنشاء `backend/models/Transaction.ts`
+    - `[x]` إنشاء `backend/models/ChatMessage.ts`
+- `[x]` إعداد المصادقة والأمان
+    - `[x]` تثبيت `firebase-admin`
+    - `[x]` إنشاء `backend/middleware/authMiddleware.ts`
+- `[x]` تقسيم المنطق البرمجي (Controllers & Routes)
+    - `[x]` إعداد مسارات المستخدم `backend/routes/userRoutes.ts`
+    - `[x]` إعداد مسارات الإدارة `backend/routes/adminRoutes.ts`
+    - `[x]` إعداد مسارات المصادقة `backend/routes/authRoutes.ts`
+- `[x]` تحديث ملف `server.ts` الأساسي
+    - `[x]` ربط جميع المسارات الجديدة
+    - `[x]` تنظيف الكود القديم
+- `[/]` التحقق والاختبار
+    - `[ ]` التأكد من عمل الاتصال بقاعدة البيانات
+    - `[ ]` التأكد من عمل الـ APIs بشكل صحيح من الفرونت اند
