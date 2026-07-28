@@ -18,8 +18,8 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 3000, // تقليل وقت الانتظار لكشف الفشل بسرعة
+      connectTimeoutMS: 5000,
       dbName: 'more',
     };
 

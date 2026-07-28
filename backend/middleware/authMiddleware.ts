@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Request, Response, NextFunction } from 'express';
-import { authAdmin } from '../config/firebase';
+import { getAuthAdmin } from '../config/firebase';
 import { connectToDatabase } from '../config/db';
 import { User } from '../models/User';
 
@@ -18,11 +18,12 @@ export const authMiddleware = async (req: any, res: any, next: any) => {
   const idToken = authHeader.split('Bearer ')[1];
 
   try {
-    if (!authAdmin) {
+    const adminAuth = getAuthAdmin();
+    if (!adminAuth) {
       console.error("❌ Firebase Auth Admin is not initialized");
       return res.status(500).json({ error: 'Server Error', message: 'خدمة التحقق من الهوية غير متوفرة حالياً' });
     }
-    const decodedToken = await authAdmin.verifyIdToken(idToken);
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
     req.user = decodedToken;
     next();
   } catch (error) {

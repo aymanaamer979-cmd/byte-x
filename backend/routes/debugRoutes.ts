@@ -1,14 +1,15 @@
 import { Router } from 'express';
 import { User } from '../models/User';
 import { connectToDatabase } from '../config/db';
-import { authAdmin } from '../config/firebase';
+import { getAuthAdmin } from '../config/firebase';
 
 const router = Router();
 
 router.get('/config-check', async (req, res) => {
   const hasMongo = !!process.env.MONGODB_URI;
   const hasFirebaseEnv = !!process.env.FIREBASE_SERVICE_ACCOUNT;
-  const isFirebaseInitialized = !!authAdmin;
+  const adminAuth = getAuthAdmin();
+  const isFirebaseInitialized = !!adminAuth;
 
   let dbStatus = "Unknown";
   let userCount = 0;
