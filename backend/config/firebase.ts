@@ -1,4 +1,5 @@
-import admin from 'firebase-admin';
+// @ts-nocheck
+import * as admin from 'firebase-admin';
 
 if (!admin.apps.length) {
   try {

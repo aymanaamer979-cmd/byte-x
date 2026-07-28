@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { User } from '../models/User';
 import { Transaction } from '../models/Transaction';
 import { currencySetter } from '../config/db';

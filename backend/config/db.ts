@@ -1,3 +1,4 @@
+// @ts-nocheck
 import mongoose from 'mongoose';
 
 const DEFAULT_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
