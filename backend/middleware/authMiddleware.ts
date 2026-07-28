@@ -26,9 +26,15 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
 };
 
 export const adminOnly = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  if (!req.user || req.user.admin !== true) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'يرجى تسجيل الدخول أولاً' });
+  }
+
+  if (req.user.admin !== true) {
+    console.warn(`🚫 Non-admin access attempt by: ${req.user.email} (UID: ${req.user.uid})`);
     return res.status(403).json({ error: 'Forbidden', message: 'عذراً، هذه الصلاحية للمدراء فقط' });
   }
+
   next();
 };
 

@@ -1,6 +1,6 @@
 // server.ts - Entry Point for Express & Vercel
 import 'dotenv/config';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -35,11 +35,25 @@ app.get('/api/db-status', async (req: Request, res: Response) => {
   }
 });
 
-// Serving Static Files (Production)
+// Global Error Handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error("🔥 Global Server Error:", err);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+  });
+});
+
+// Serving Static Files & SPA Routing
 if (process.env.NODE_ENV === "production") {
   const distPath = path.join(process.cwd(), 'dist');
   app.use(express.static(distPath));
-  app.get('*', (req: Request, res: Response) => res.sendFile(path.join(distPath, 'index.html')));
+  // Vercel routes handle the catch-all usually, but this is a safety fallback
+  app.get('*', (req: Request, res: Response) => {
+    if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'API Not Found' });
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
 } else {
   // Local Development with Vite Middleware
   import('vite').then(async (viteModule) => {
@@ -50,12 +64,12 @@ if (process.env.NODE_ENV === "production") {
     app.use(vite.middlewares);
     console.log(`🚀 Development server ready on http://localhost:${PORT}`);
   }).catch(err => {
-    console.warn("⚠️ Vite middleware failed to load, static files only.");
+    console.warn("⚠️ Vite middleware failed to load.");
   });
 }
 
 // Start Server (only if not running as a Vercel function)
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (!process.env.VERCEL) {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`🚀 Server listening on port ${PORT}`);
   });

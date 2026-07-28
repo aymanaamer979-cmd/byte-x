@@ -1,8 +1,10 @@
 import { Router } from 'express';
+import { User } from '../models/User';
+import { connectToDatabase } from '../config/db';
 
 const router = Router();
 
-router.get('/config-check', (req, res) => {
+router.get('/config-check', async (req, res) => {
   const hasMongo = !!process.env.MONGODB_URI;
   const hasFirebase = !!process.env.FIREBASE_SERVICE_ACCOUNT;
 
@@ -16,12 +18,26 @@ router.get('/config-check', (req, res) => {
     }
   }
 
+  let dbStatus = "Unknown";
+  let userCount = 0;
+  try {
+    await connectToDatabase();
+    dbStatus = "✅ Connected to Atlas";
+    userCount = await User.countDocuments();
+  } catch (err: any) {
+    dbStatus = `❌ Error: ${err.message}`;
+  }
+
   res.json({
     env: {
       MONGODB_URI: hasMongo ? "✅ Configured" : "❌ Missing",
       FIREBASE_SERVICE_ACCOUNT: hasFirebase ? (firebaseValid ? "✅ Valid JSON" : "⚠️ Invalid JSON Format") : "❌ Missing"
     },
-    version: "2.0-Organized-Backend" // لنتأكد أننا نشغل الكود الجديد
+    database: {
+      status: dbStatus,
+      usersInDb: userCount
+    },
+    version: "2.1-Diagnostic-Build"
   });
 });
 

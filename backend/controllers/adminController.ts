@@ -6,9 +6,12 @@ import { currencySetter } from '../config/db';
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
+    console.log(`🔍 Admin ${req.user?.email} is fetching all users...`);
     const users = await userService.getAllUsers();
+    console.log(`✅ Found ${users.length} users.`);
     res.json(users);
   } catch (error: any) {
+    console.error("❌ Error in getAllUsers:", error);
     res.status(500).json({ error: "Admin get users error", details: error.message });
   }
 };
