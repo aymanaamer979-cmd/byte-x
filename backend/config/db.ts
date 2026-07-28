@@ -1,7 +1,8 @@
 // @ts-nocheck
 import mongoose from 'mongoose';
 
-const DIRECT_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
+const FALLBACK_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
+const MONGODB_URI = process.env.MONGODB_URI || FALLBACK_MONGODB_URI;
 
 let cached = (global as any).mongoose;
 if (!cached) {
@@ -23,7 +24,7 @@ export async function connectToDatabase() {
 
     console.log("⏳ Connecting to MongoDB Atlas...");
 
-    cached.promise = mongoose.connect(DIRECT_MONGODB_URI, opts).then((mongooseInstance) => {
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
       console.log(`🚀 MongoDB Connected: ${mongoose.connection.db?.databaseName}`);
       return mongooseInstance;
     }).catch(err => {

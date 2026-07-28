@@ -18,6 +18,10 @@ export const authMiddleware = async (req: any, res: any, next: any) => {
   const idToken = authHeader.split('Bearer ')[1];
 
   try {
+    if (!authAdmin) {
+      console.error("❌ Firebase Auth Admin is not initialized");
+      return res.status(500).json({ error: 'Server Error', message: 'خدمة التحقق من الهوية غير متوفرة حالياً' });
+    }
     const decodedToken = await authAdmin.verifyIdToken(idToken);
     req.user = decodedToken;
     next();

@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { userService } from '../services/userService';
 import { transactionService } from '../services/transactionService';
 import { ChatMessage } from '../models/ChatMessage';
+import { connectToDatabase } from '../config/db';
 
 export const getProfile = async (req: any, res: any) => {
   try {
