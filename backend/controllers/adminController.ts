@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { User } from '../models/User';
 import { userService } from '../services/userService';
 import { transactionService } from '../services/transactionService';
-import { currencySetter } from '../config/db';
+import { currencySetter } from '../config/utils';
 
 export const getAllUsers = async (req: any, res: any) => {
   try {

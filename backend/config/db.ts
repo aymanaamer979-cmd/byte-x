@@ -4,9 +4,10 @@ import mongoose from 'mongoose';
 const FALLBACK_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
 const MONGODB_URI = process.env.MONGODB_URI || FALLBACK_MONGODB_URI;
 
-let cached = (global as any).mongoose;
+// Use globalThis for better compatibility with Vercel/Serverless environments
+let cached = (globalThis as any).mongoose;
 if (!cached) {
-  cached = (global as any).mongoose = { conn: null, promise: null };
+  cached = (globalThis as any).mongoose = { conn: null, promise: null };
 }
 
 export async function connectToDatabase() {

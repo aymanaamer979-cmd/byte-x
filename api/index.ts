@@ -1,5 +1,4 @@
 // @ts-nocheck
-import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
@@ -17,7 +16,9 @@ app.use(cors());
 app.use(express.json());
 
 // Boot check log
-console.log("🚀 Server is booting up...");
+console.log("🚀 Server Boot Sequence Started - " + new Date().toISOString());
+console.log("📍 Node Version: " + process.version);
+console.log("📍 Memory Usage: " + Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB");
 
 // Request Logger
 app.use((req, res, next) => {

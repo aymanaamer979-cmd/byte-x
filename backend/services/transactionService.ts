@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Transaction } from '../models/Transaction';
 import { User } from '../models/User';
-import { currencySetter } from '../config/db';
+import { currencySetter } from '../config/utils';
 
 export const transactionService = {
   async getUserTransactions(uid: string, limit = 100) {

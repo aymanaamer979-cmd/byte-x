@@ -8,3 +8,6 @@
 - [x] إنشاء `utils.ts` ونقل `currencySetter` لفك التداخل (Circular Dependency)
 - [x] تحديث الموديلات والخدمات لاستخدام `utils.ts`
 - [x] تأمين إضافي لـ `firebase.ts` ضد أخطاء الـ JSON في Vercel
+- [x] تحديث `db.ts` لاستخدام `globalThis` وتحسين استقرار الاتصال
+- [x] تحصين نهائي لـ `firebase.ts` مع معالجة متقدمة لمفاتيح التشفير
+- [x] إضافة سجلات تتبع (Boot Logs) في `index.ts`
