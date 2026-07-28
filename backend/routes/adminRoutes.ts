@@ -10,6 +10,7 @@ router.use(adminOnly);
 
 router.get('/users', adminController.getAllUsers);
 router.get('/stats', adminController.getUserStats);
+router.post('/user/:uid/adjust-balance', adminController.adjustBalance); // المسار الموحد الجديد
 router.post('/user/:uid/update-financials', adminController.updateFinancials);
 router.put('/user/:uid/update-financials', adminController.updateFinancials);
 router.get('/transactions', adminController.getAllTransactions);

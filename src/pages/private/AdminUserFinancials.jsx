@@ -310,20 +310,9 @@ function AdminUserFinancials() {
     const descValue = descInput || 'إيداع يدوي من الإدارة';
 
     try {
-      const updateData = {
-        balance: (selectedUser.balance ?? 35) + amount,
-        investments: (selectedUser.investments ?? 0) + amount,
-        profits: selectedUser.profits,
-        isVerified: selectedUser.isVerified,
-        depositBonus: selectedUser.depositBonus,
-        depositBonusDate: selectedUser.depositBonusDate
-      };
-      await api.adminUpdateFinancials(selectedUser.id, updateData);
-
-      await api.adminCreateOrEditTransaction(selectedUser.id, {
+      await api.adminAdjustBalance(selectedUser.id, {
         amount,
         type: 'deposit',
-        status: 'completed',
         description: descValue
       });
 
@@ -348,20 +337,9 @@ function AdminUserFinancials() {
     const descValue = descInput || 'مكافأة من الإدارة';
 
     try {
-      const updateData = {
-        balance: (selectedUser.balance ?? 35) + amount,
-        investments: selectedUser.investments,
-        profits: selectedUser.profits,
-        isVerified: selectedUser.isVerified,
-        depositBonus: selectedUser.depositBonus,
-        depositBonusDate: selectedUser.depositBonusDate
-      };
-      await api.adminUpdateFinancials(selectedUser.id, updateData);
-
-      await api.adminCreateOrEditTransaction(selectedUser.id, {
+      await api.adminAdjustBalance(selectedUser.id, {
         amount,
         type: 'reward',
-        status: 'completed',
         description: descValue
       });
 
@@ -386,20 +364,9 @@ function AdminUserFinancials() {
     const descValue = descInput || 'أرباح استثمارية مضافة';
 
     try {
-      const updateData = {
-        balance: (selectedUser.balance ?? 35) + amount,
-        investments: selectedUser.investments,
-        profits: (selectedUser.profits ?? 0) + amount,
-        isVerified: selectedUser.isVerified,
-        depositBonus: selectedUser.depositBonus,
-        depositBonusDate: selectedUser.depositBonusDate
-      };
-      await api.adminUpdateFinancials(selectedUser.id, updateData);
-
-      await api.adminCreateOrEditTransaction(selectedUser.id, {
+      await api.adminAdjustBalance(selectedUser.id, {
         amount,
         type: 'profit',
-        status: 'completed',
         description: descValue
       });
 
@@ -429,20 +396,9 @@ function AdminUserFinancials() {
     const descValue = descInput || 'سحب يدوي من الإدارة';
 
     try {
-      const updateData = {
-        balance: Math.max(0, (selectedUser.balance ?? 35) - amount),
-        investments: selectedUser.investments,
-        profits: selectedUser.profits,
-        isVerified: selectedUser.isVerified,
-        depositBonus: selectedUser.depositBonus,
-        depositBonusDate: selectedUser.depositBonusDate
-      };
-      await api.adminUpdateFinancials(selectedUser.id, updateData);
-
-      await api.adminCreateOrEditTransaction(selectedUser.id, {
+      await api.adminAdjustBalance(selectedUser.id, {
         amount,
         type: 'withdraw',
-        status: 'completed',
         description: descValue
       });
 

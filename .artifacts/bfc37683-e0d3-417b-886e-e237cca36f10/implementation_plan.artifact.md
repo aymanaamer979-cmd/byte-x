@@ -1,43 +1,42 @@
-# خطة حل مشكلة ظهور الأخطاء القديمة (Stale Build) والتحقق من الربط
+# خطة توحيد عمليات الكتابة في MongoDB Atlas ومنع تشتت البيانات
 
-الخطأ الذي يظهر لك (`Missing Admin Header (x-admin-uid)`) هو خطأ **قديم** لم يعد موجوداً في الكود الحالي الذي قمنا بتنظيمه. ظهور هذا الخطأ يعني أن التطبيق (سواء على Vercel أو محلياً) لا يزال يشغل نسخة قديمة ومبنية (Bundled) من الباك اند والفرونت اند.
+بعد التأكد من أن مشروعك يستخدم MongoDB Atlas كقاعدة بيانات أساسية للبيانات المالية، تهدف هذه الخطة إلى ضمان أن جميع عمليات الإيداع، السحب، الأرباح، والمكافآت تتم في "خطوة واحدة" فقط داخل MongoDB، مما يمنع أي فرصة لاستخدام قواعد بيانات أخرى بالخطأ ويضمن دقة السجلات.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **تحديث النسخة المبنية**: الخطأ يظهر من ملف `dist/index-f52Wfmtw.js` و `dist/server.cjs`. هذه الملفات يتم إنشاؤها عند عمل `build`. سنقوم بإعادة بنائها لضمان تشغيل الكود الجديد.
+> **تبسيط الواجهة البرمجية (API Simplification)**: حالياً، يقوم الفرونت اند بإرسال طلبين منفصلين (واحد لتحديث الرصيد وآخر لإنشاء السجل). سنقوم بدمجهما في طلب واحد فقط للسيرفر.
 >
-> **تنبيه**: إذا كنت تستخدم Vercel، يجب التأكد من عمل "Redeploy" بعد حفظ التغييرات الحالية.
+> **النتيجة**: السيرفر سيتولى "تأمين" العملية؛ فإما أن تنجح العملية بالكامل (تحديث رصيد + إنشاء سجل) أو تفشل بالكامل، وهذا يحمي أموال المستثمرين من الضياع في الحسابات.
 
 ## Proposed Changes
 
-### 1. تنظيف النسخ القديمة وإعادة البناء (Clean & Build)
+### 1. تعزيز خدمات الباك اند (Backend Services)
 
-سنقوم بتشغيل أوامر لمسح مجلد `dist` وإعادة بناء المشروع بالكامل:
-- `npm run clean` (إذا كان متاحاً) أو مسح يدوي لمجلد `dist`.
-- `npm run build` لإنشاء النسخ الجديدة من الفرونت اند والباك اند.
+#### [MODIFY] [adminController.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/controllers/adminController.ts)
+- إضافة مسار جديد `/api/admin/user/:uid/adjust-balance` يتعامل مع (الإيداع، السحب، المكافأة، الأرباح) كعملية واحدة.
+- استخدام `userService.updateFinancials` لتنفيذ هذه العمليات بشكل موحد.
 
-### 2. التحقق من مسارات الـ API (API Route Verification)
+### 2. توحيد الاستدعاءات في الفرونت اند (Frontend Unification)
 
-سنتأكد من أن الباك اند الجديد يستجيب بشكل صحيح ولا يطلب أي Headers قديمة:
-- اختبار المسار `/api/db-status` للتأكد من الاتصال بالقاعدة.
-- اختبار المسار `/api/admin/users` بتوكن صالح للتأكد من زوال خطأ `x-admin-uid`.
+#### [MODIFY] [api.js](file:///C:/Users/alfaa/Desktop/getProject/src/lib/api.js)
+- إضافة دالة `adminAdjustBalance` التي تخاطب المسار الجديد.
 
-### 3. معالجة مشكلة الـ Cache في المتصفح
+#### [MODIFY] [AdminUserFinancials.jsx](file:///C:/Users/alfaa/Desktop/getProject/src/pages/private/AdminUserFinancials.jsx)
+- تحديث دوال `handleAddManualDeposit`, `handleAddManualReward`, `handleAddManualProfit`, `handleAddManualWithdrawal` لتقوم بطلبية واحدة فقط للسيرفر.
 
-أحياناً المتصفح يحتفظ بملفات `index-xxxx.js` القديمة. سنحتاج لعمل Hard Refresh (Ctrl + F5).
+### 3. إزالة أي بقايا لاستدعاءات Firebase Database
+
+#### [AUDIT]
+- التأكد من عدم استخدام `getDatabase` أو `ref` أو `set` من مكتبة Firebase داخل ملفات الـ Controllers أو الخدمات.
 
 ---
-
-## Proposed File Structure Changes
-
-لا يوجد تغييرات في هيكلية الملفات حالياً، فقط سنركز على عمليات البناء (Build Operations).
 
 ## Verification Plan
 
 ### Automated Tests
-- تشغيل السيرفر محلياً واختبار الـ API عبر `curl` أو المتصفح.
-- التأكد من أن رد السيرفر لا يحتوي على `Missing Admin Header`.
+- تجربة إضافة أرباح لمستخدم من لوحة الأدمن.
+- التحقق من MongoDB Atlas مباشرة للتأكد من تحديث مستند المستخدم (`User`) ونشوء مستند جديد في (`Transactions`) في نفس اللحظة.
 
 ### Manual Verification
-- فتح لوحة التحكم بعد البناء الجديد والتأكد من ظهور قائمة المستثمرين.
+- مراقبة كونسول السيرفر للتأكد من ظهور رسالة `🔌 Connected to MongoDB Atlas` عند تنفيذ كل عملية.

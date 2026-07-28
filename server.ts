@@ -10,6 +10,7 @@ import { connectToDatabase } from './backend/config/db';
 import authRoutes from './backend/routes/authRoutes';
 import userRoutes from './backend/routes/userRoutes';
 import adminRoutes from './backend/routes/adminRoutes';
+import debugRoutes from './backend/routes/debugRoutes';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Health Check / DB Status
 app.get('/api/db-status', async (req: Request, res: Response) => {

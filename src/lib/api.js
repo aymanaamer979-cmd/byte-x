@@ -153,6 +153,15 @@ export const api = {
     return handleResponse(response);
   },
 
+  async adminAdjustBalance(uid, { amount, type, description }) {
+    const response = await fetch(`${BASE_URL}/admin/user/${uid}/adjust-balance`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ amount, type, description })
+    });
+    return handleResponse(response);
+  },
+
   async adminUpdateFinancials(uid, { balance, investments, profits, isVerified, depositBonus, depositBonusDate }) {
     const response = await fetch(`${BASE_URL}/admin/user/${uid}/update-financials`, {
       method: 'POST',

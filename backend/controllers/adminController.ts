@@ -62,6 +62,29 @@ export const updateFinancials = async (req: Request, res: Response) => {
   }
 };
 
+export const adjustBalance = async (req: Request, res: Response) => {
+  try {
+    const { uid } = req.params;
+    const { amount, type, description } = req.body;
+
+    if (!uid || amount === undefined || !type) {
+      return res.status(400).json({ error: "Missing required parameters" });
+    }
+
+    const result = await userService.updateFinancials(uid, {
+      amount: Number(amount),
+      type: type as any,
+      description: description || 'تعديل بواسطة الإدارة',
+      status: 'completed',
+      isManualAdminUpdate: true
+    });
+
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    res.status(500).json({ error: "Admin adjust balance error", details: error.message });
+  }
+};
+
 export const getAllTransactions = async (req: Request, res: Response) => {
   try {
     const txs = await transactionService.getAllTransactions();
