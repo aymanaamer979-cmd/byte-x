@@ -29,14 +29,30 @@ export const updateProfile = async (req: any, res: any) => {
 export const updatePhone = async (req: any, res: any) => {
   try {
     const { uid, phone } = req.body;
+    console.log(`📱 Attempting to update phone for UID: ${uid}, Phone: ${phone}`);
+
     if (!uid || !phone) {
       return res.status(400).json({ error: "Missing required parameters: uid and phone" });
     }
+
+    await connectToDatabase();
+
     const updatedUser = await userService.updateProfile(uid, { phone });
-    if (!updatedUser) return res.status(404).json({ error: "User not found" });
+
+    if (!updatedUser) {
+      console.error(`❌ User not found for UID: ${uid}`);
+      return res.status(404).json({ error: "User not found in database" });
+    }
+
+    console.log(`✅ Phone updated successfully for UID: ${uid}`);
     res.json({ success: true, message: "تم تحديث رقم الهاتف بنجاح", user: updatedUser });
   } catch (error: any) {
-    res.status(500).json({ error: "Update phone error", details: error.message });
+    console.error("❌ updatePhone Error:", error.message);
+    res.status(500).json({
+      error: "Update phone error",
+      message: error.message,
+      hint: "Ensure MongoDB connection is stable"
+    });
   }
 };
 

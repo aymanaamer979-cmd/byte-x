@@ -1,15 +1,16 @@
 // @ts-nocheck
-import admin from 'firebase-admin';
+import * as admin from 'firebase-admin';
 
-if (!admin.apps.length) {
-  try {
+let authAdmin = null;
+
+try {
+  if (!admin.apps.length) {
     const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;
 
     if (serviceAccountVar && serviceAccountVar.trim().length > 10) {
-      let serviceAccount;
       try {
         const cleanJson = serviceAccountVar.trim().replace(/^['"]|['"]$/g, '');
-        serviceAccount = JSON.parse(cleanJson);
+        const serviceAccount = JSON.parse(cleanJson);
 
         if (serviceAccount.private_key) {
           serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
@@ -18,25 +19,20 @@ if (!admin.apps.length) {
         admin.initializeApp({
           credential: admin.credential.cert(serviceAccount)
         });
-        console.log("🔥 Firebase Admin initialized via Environment Variable");
+        console.log("🔥 Firebase Admin initialized successfully");
+        authAdmin = admin.auth();
       } catch (e) {
-        console.error("❌ CRITICAL: Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", e.message);
-        // لا ننهي البرنامج هنا، لكي يعمل مسار التشخيص
+        console.error("❌ Firebase Admin JSON Parse Error:", e.message);
       }
     } else {
-      console.warn("⚠️ FIREBASE_SERVICE_ACCOUNT is missing or too short. Trying Default Credentials...");
-      try {
-        admin.initializeApp({
-          credential: admin.credential.applicationDefault()
-        });
-      } catch (e) {
-        console.error("❌ Firebase Admin: No credentials available.");
-      }
+      console.warn("⚠️ FIREBASE_SERVICE_ACCOUNT env var is empty or missing");
     }
-  } catch (error) {
-    console.error("❌ Firebase Admin initialization error:", error.message);
+  } else {
+    authAdmin = admin.auth();
   }
+} catch (error) {
+  console.error("❌ Global Firebase Admin Error:", error.message);
 }
 
-export const authAdmin = admin.auth();
+export { authAdmin };
 export default admin;

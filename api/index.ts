@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-// Import Organized Routes
+// Lazy load routes to prevent top-level crashes
 import { connectToDatabase } from '../backend/config/db';
 import authRoutes from '../backend/routes/authRoutes';
 import userRoutes from '../backend/routes/userRoutes';
@@ -16,10 +16,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Logger for Vercel
+// Request Logger
 app.use((req, res, next) => {
-  console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
+  console.log(`📡 [${req.method}] ${req.url}`);
   next();
+});
+
+// [NEW] Simple Ping Route (Works without DB)
+app.get('/api/ping', (req, res) => {
+  res.json({
+    status: "alive",
+    message: "Server is responding",
+    time: new Date().toISOString()
+  });
 });
 
 // API Routes
@@ -28,34 +37,34 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/debug', debugRoutes);
 
-// Health Check
+// Detailed DB Status
 app.get('/api/db-status', async (req, res) => {
   try {
-    const conn = await connectToDatabase();
+    await connectToDatabase();
     res.json({
       status: mongoose.connection.readyState === 1 ? "connected" : "connecting",
       database: mongoose.connection.db?.databaseName || 'unknown',
       time: new Date().toISOString()
     });
   } catch (error) {
-    console.error("❌ DB Status Failure:", error.message);
-    res.status(500).json({ status: "disconnected", error: error.message });
+    console.error("❌ DB Status Route Error:", error.message);
+    res.status(500).json({
+      status: "disconnected",
+      error: error.message,
+      hint: "Check MongoDB Atlas Network Access (0.0.0.0/0)"
+    });
   }
 });
 
-// GLOBAL ERROR HANDLER
+// [CRITICAL] Global Error Catcher
 app.use((err, req, res, next) => {
-  console.error("🔥 SERVER ERROR:", err);
+  console.error("🔥 SERVER CRASH PREVENTED:", err);
   res.status(500).json({
-    error: "Internal Server Error",
+    error: "Internal Server Error (Caught)",
     message: err.message,
-    path: req.url
+    path: req.url,
+    timestamp: new Date().toISOString()
   });
-});
-
-// Catch-all for API 404s
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: "Endpoint Not Found", url: req.originalUrl });
 });
 
 export default app;
