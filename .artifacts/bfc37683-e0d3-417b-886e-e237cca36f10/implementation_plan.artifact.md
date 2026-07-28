@@ -1,43 +1,43 @@
-# خطة ضبط استدعاءات Firebase Admin وتفعيل الأمان
+# خطة حل مشكلة ظهور الأخطاء القديمة (Stale Build) والتحقق من الربط
 
-بناءً على توضيحك، سنقوم بضبط طريقة استدعاء ملف السيرفس (Service Account) ليعمل بسلاسة مع متغير البيئة `FIREBASE_SERVICE_ACCOUNT` الذي أعددته، بالإضافة إلى تحديث سكريبت `set-admin.js` ليكون أكثر مرونة.
+الخطأ الذي يظهر لك (`Missing Admin Header (x-admin-uid)`) هو خطأ **قديم** لم يعد موجوداً في الكود الحالي الذي قمنا بتنظيمه. ظهور هذا الخطأ يعني أن التطبيق (سواء على Vercel أو محلياً) لا يزال يشغل نسخة قديمة ومبنية (Bundled) من الباك اند والفرونت اند.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **ملاحظة حول مفتاح الخصوصية**: مفتاح `private_key` في فيرباس غالباً ما يحتوي على رموز سطر جديد (`\n`). عند وضعه كمتغير بيئة في فيرسل، قد يتم تفسيره بشكل خاطئ. سأقوم بإضافة كود لمعالجة هذا الأمر تلقائياً لضمان نجاح الاتصال.
+> **تحديث النسخة المبنية**: الخطأ يظهر من ملف `dist/index-f52Wfmtw.js` و `dist/server.cjs`. هذه الملفات يتم إنشاؤها عند عمل `build`. سنقوم بإعادة بنائها لضمان تشغيل الكود الجديد.
+>
+> **تنبيه**: إذا كنت تستخدم Vercel، يجب التأكد من عمل "Redeploy" بعد حفظ التغييرات الحالية.
 
 ## Proposed Changes
 
-### 1. تحسين تهيئة الباك اند (Backend Initialization)
+### 1. تنظيف النسخ القديمة وإعادة البناء (Clean & Build)
 
-#### [MODIFY] [firebase.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/config/firebase.ts)
-- تعديل الكود ليقوم بقراءة `FIREBASE_SERVICE_ACCOUNT` من متغيرات البيئة.
-- معالجة الـ `private_key` لاستبدال `\\n` بـ `\n` الحقيقية لضمان قبول فيرباس للمفتاح.
+سنقوم بتشغيل أوامر لمسح مجلد `dist` وإعادة بناء المشروع بالكامل:
+- `npm run clean` (إذا كان متاحاً) أو مسح يدوي لمجلد `dist`.
+- `npm run build` لإنشاء النسخ الجديدة من الفرونت اند والباك اند.
 
-### 2. تحديث سكريبت الإدارة (Admin Script)
+### 2. التحقق من مسارات الـ API (API Route Verification)
 
-#### [MODIFY] [set-admin.js](file:///C:/Users/alfaa/Desktop/getProject/set-admin.js)
-- جعله يحاول القراءة من ملف `serviceAccountKey.json` محلياً أولاً، وإذا لم يجده يحاول القراءة من متغيرات البيئة. هذا يسمح لك بتشغيله في أي بيئة.
+سنتأكد من أن الباك اند الجديد يستجيب بشكل صحيح ولا يطلب أي Headers قديمة:
+- اختبار المسار `/api/db-status` للتأكد من الاتصال بالقاعدة.
+- اختبار المسار `/api/admin/users` بتوكن صالح للتأكد من زوال خطأ `x-admin-uid`.
 
-### 3. ربط التوكن في الفرونت اند (Frontend Token Integration)
+### 3. معالجة مشكلة الـ Cache في المتصفح
 
-#### [MODIFY] [api.js](file:///C:/Users/alfaa/Desktop/getProject/src/lib/api.js)
-- تحديث جميع استدعاءات الـ API لتجلب التوكن الحالي من Firebase Auth وتضعه في الـ Header كـ `Bearer Token`.
-
-### 4. تفعيل الحماية (Security Activation)
-
-#### [MODIFY] [userRoutes.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/routes/userRoutes.ts)
-#### [MODIFY] [adminRoutes.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/routes/adminRoutes.ts)
-- ربط الـ `authMiddleware` بشكل فعلي لمنع أي وصول غير مصرح به.
+أحياناً المتصفح يحتفظ بملفات `index-xxxx.js` القديمة. سنحتاج لعمل Hard Refresh (Ctrl + F5).
 
 ---
+
+## Proposed File Structure Changes
+
+لا يوجد تغييرات في هيكلية الملفات حالياً، فقط سنركز على عمليات البناء (Build Operations).
 
 ## Verification Plan
 
 ### Automated Tests
-- تشغيل `set-admin.js` والتأكد من نجاحه في الاتصال عبر متغير البيئة.
-- اختبار مسار `/api/db-status` للتأكد من أن الباك اند يعمل بدون أخطاء في التهيئة.
+- تشغيل السيرفر محلياً واختبار الـ API عبر `curl` أو المتصفح.
+- التأكد من أن رد السيرفر لا يحتوي على `Missing Admin Header`.
 
 ### Manual Verification
-- تسجيل الدخول من الواجهة والتأكد من أن بيانات المستخدم تظهر (مما يعني نجاح الـ Sync والتوكن).
+- فتح لوحة التحكم بعد البناء الجديد والتأكد من ظهور قائمة المستثمرين.
