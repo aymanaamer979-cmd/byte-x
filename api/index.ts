@@ -31,15 +31,23 @@ app.use('/api/debug', debugRoutes);
 // Health Check
 app.get('/api/db-status', async (req, res) => {
   try {
-    await connectToDatabase();
+    const conn = await connectToDatabase();
+    const isConnected = mongoose.connection.readyState === 1;
+
     res.json({
-      status: "connected",
+      status: isConnected ? "connected" : "connecting",
+      readyState: mongoose.connection.readyState,
       database: mongoose.connection.db?.databaseName,
+      ping: isConnected ? await mongoose.connection.db.admin().ping() : null,
       time: new Date().toISOString()
     });
   } catch (error) {
-    console.error("❌ DB Status Failed:", error.message);
-    res.status(500).json({ status: "disconnected", error: error.message });
+    console.error("❌ DB Status Detailed Failure:", error.message);
+    res.status(500).json({
+      status: "disconnected",
+      error: error.message,
+      stack: error.stack
+    });
   }
 });
 

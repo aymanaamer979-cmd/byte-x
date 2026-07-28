@@ -1,58 +1,8 @@
 // @ts-nocheck
 import mongoose from 'mongoose';
 
-const DEFAULT_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
-
-function formatMongoUri(rawUri: string, targetDb: string = 'more'): string {
-  if (!rawUri || typeof rawUri !== 'string') return rawUri;
-  let uri = rawUri.trim();
-
-  const protoIdx = uri.indexOf('://');
-  if (protoIdx !== -1) {
-    const proto = uri.substring(0, protoIdx + 3);
-    const rest = uri.substring(protoIdx + 3);
-    const lastAt = rest.lastIndexOf('@');
-    if (lastAt !== -1) {
-      const creds = rest.substring(0, lastAt);
-      const afterCreds = rest.substring(lastAt);
-      const colonIdx = creds.indexOf(':');
-      if (colonIdx !== -1) {
-        const user = creds.substring(0, colonIdx);
-        const pass = creds.substring(colonIdx + 1);
-        if (pass.includes('@') && !pass.includes('%40')) {
-          const encodedPass = pass.replace(/@/g, '%40');
-          uri = `${proto}${user}:${encodedPass}${afterCreds}`;
-        }
-      }
-    }
-  }
-
-  const protoIndex = uri.indexOf('://');
-  if (protoIndex === -1) return uri;
-
-  const protocol = uri.substring(0, protoIndex + 3);
-  const afterProto = uri.substring(protoIndex + 3);
-
-  const queryIndex = afterProto.indexOf('?');
-  let pathPart = queryIndex !== -1 ? afterProto.substring(0, queryIndex) : afterProto;
-  const queryPart = queryIndex !== -1 ? afterProto.substring(queryIndex) : '';
-
-  const firstSlashIndex = pathPart.indexOf('/');
-  let hostPart = pathPart;
-  if (firstSlashIndex !== -1) {
-    hostPart = pathPart.substring(0, firstSlashIndex);
-  }
-
-  return `${protocol}${hostPart}/${targetDb}${queryPart}`;
-}
-
-const MONGODB_URI = formatMongoUri(process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGODB_URI, 'more');
-
-if (MONGODB_URI) {
-  console.log(`📡 MONGODB_URI Prefix: ${MONGODB_URI.substring(0, 10)}...`);
-} else {
-  console.error("❌ MONGODB_URI is totally missing!");
-}
+// الرابط المباشر الذي قدمته للتجربة (سيتم حذفه لاحقاً للأمان)
+const DIRECT_MONGODB_URI = "mongodb+srv://aymanaamer979_db_user:fahdIMRAN1@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
 
 let cached = (global as any).mongoose;
 if (!cached) {
@@ -67,15 +17,19 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000, // زيادة وقت الانتظار لـ 10 ثوانٍ
       dbName: 'more',
     };
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+
+    console.log("⏳ Attempting to connect to MongoDB Atlas directly...");
+
+    cached.promise = mongoose.connect(DIRECT_MONGODB_URI, opts).then((mongooseInstance) => {
       console.log(`🚀 DATABASE SUCCESS: Connected to MongoDB Atlas!`);
       console.log(`📍 Active Database: ${mongoose.connection.db?.databaseName}`);
       return mongooseInstance;
     }).catch(err => {
-      console.error(`❌ DATABASE CRITICAL ERROR:`, err.message);
+      console.error(`❌ DATABASE CONNECTION ERROR:`, err.message);
+      cached.promise = null; // إعادة التعيين للمحاولة مرة أخرى
       throw err;
     });
   }
