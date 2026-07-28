@@ -3,81 +3,55 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-// Lazy load routes to prevent top-level crashes
-import { connectToDatabase } from '../backend/config/db';
-import authRoutes from '../backend/routes/authRoutes';
-import userRoutes from '../backend/routes/userRoutes';
-import adminRoutes from '../backend/routes/adminRoutes';
-import debugRoutes from '../backend/routes/debugRoutes';
+// Catch all process errors to prevent Vercel crash
+process.on('uncaughtException', (err) => {
+  console.error('🔥 CRITICAL UNCAUGHT ERROR:', err.message);
+  console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 UNHANDLED REJECTION:', reason);
+});
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
-// Boot check log
-console.log("🚀 Server Boot Sequence Started - " + new Date().toISOString());
-console.log("📍 Node Version: " + process.version);
-console.log("📍 Memory Usage: " + Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + "MB");
+// Boot logs
+console.log("🚀 Vercel Function Booting...");
 
-// Request Logger
-app.use((req, res, next) => {
-  console.log(`📡 [${req.method}] ${req.url}`);
-  next();
-});
-
-// [NEW] Simple Ping Route (Works without DB)
-app.get('/api/ping', (req, res) => {
-  res.json({
-    status: "alive",
-    message: "Server is responding",
-    time: new Date().toISOString()
-  });
-});
-
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/debug', debugRoutes);
-
-// [NEW] 404 Handler for API
-app.use('/api/*', (req, res) => {
-  res.status(404).json({
-    error: "API Route Not Found",
-    path: req.originalUrl,
-    hint: "Check if the route is defined in authRoutes, userRoutes, or adminRoutes"
-  });
-});
-
-// Detailed DB Status
-app.get('/api/db-status', async (req, res) => {
+// Lazy load routes to prevent boot-time crashes
+let routesLoaded = false;
+const loadRoutes = async () => {
+  if (routesLoaded) return;
   try {
-    await connectToDatabase();
-    res.json({
-      status: mongoose.connection.readyState === 1 ? "connected" : "connecting",
-      database: mongoose.connection.db?.databaseName || 'unknown',
-      time: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error("❌ DB Status Route Error:", error.message);
-    res.status(500).json({
-      status: "disconnected",
-      error: error.message,
-      hint: "Check MongoDB Atlas Network Access (0.0.0.0/0)"
-    });
+    const { default: authRoutes } = await import('../backend/routes/authRoutes');
+    const { default: userRoutes } = await import('../backend/routes/userRoutes');
+    const { default: adminRoutes } = await import('../backend/routes/adminRoutes');
+    const { default: debugRoutes } = await import('../backend/routes/debugRoutes');
+
+    app.use('/api/auth', authRoutes);
+    app.use('/api/user', userRoutes);
+    app.use('/api/admin', adminRoutes);
+    app.use('/api/debug', debugRoutes);
+    routesLoaded = true;
+    console.log("✅ Routes Loaded Successfully");
+  } catch (err) {
+    console.error("❌ Failed to load routes:", err.message);
   }
+};
+
+// Ping route (Top level, no DB dependency)
+app.get('/api/ping', (req, res) => {
+  res.json({ status: "alive", time: new Date().toISOString() });
 });
 
-// [CRITICAL] Global Error Catcher
-app.use((err, req, res, next) => {
-  console.error("🔥 SERVER CRASH PREVENTED:", err);
-  res.status(500).json({
-    error: "Internal Server Error (Caught)",
-    message: err.message,
-    path: req.url,
-    timestamp: new Date().toISOString()
-  });
+// Middleware to ensure routes are loaded
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api/') && !routesLoaded) {
+    await loadRoutes();
+  }
+  next();
 });
 
 export default app;
