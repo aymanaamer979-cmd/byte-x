@@ -26,6 +26,20 @@ export const updateProfile = async (req: any, res: any) => {
   }
 };
 
+export const updatePhone = async (req: any, res: any) => {
+  try {
+    const { uid, phone } = req.body;
+    if (!uid || !phone) {
+      return res.status(400).json({ error: "Missing required parameters: uid and phone" });
+    }
+    const updatedUser = await userService.updateProfile(uid, { phone });
+    if (!updatedUser) return res.status(404).json({ error: "User not found" });
+    res.json({ success: true, message: "تم تحديث رقم الهاتف بنجاح", user: updatedUser });
+  } catch (error: any) {
+    res.status(500).json({ error: "Update phone error", details: error.message });
+  }
+};
+
 export const updatePresence = async (req: any, res: any) => {
   try {
     const { uid, isOnline } = req.body;

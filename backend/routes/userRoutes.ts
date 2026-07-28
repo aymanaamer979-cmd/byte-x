@@ -9,6 +9,7 @@ router.use(authMiddleware); // تم التفعيل الآن لضمان الأم�
 
 router.get('/profile/:uid', userController.getProfile);
 router.post('/update-profile', userController.updateProfile);
+router.post('/update-phone', userController.updatePhone);
 router.post('/presence', userController.updatePresence);
 router.post('/deposit', userController.deposit);
 router.post('/withdraw', userController.withdraw);

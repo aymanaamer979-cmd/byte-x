@@ -123,14 +123,14 @@ export const api = {
 
   // --- CHAT SUPPORT ---
   async getChatMessages(uid) {
-    const response = await fetch(`${BASE_URL}/chat/messages/${uid}`, {
+    const response = await fetch(`${BASE_URL}/user/chat/messages/${uid}`, {
       headers: await getHeaders()
     });
     return handleResponse(response);
   },
 
   async sendChatMessage({ userId, senderId, senderName, text, isAdmin }) {
-    const response = await fetch(`${BASE_URL}/chat/send`, {
+    const response = await fetch(`${BASE_URL}/user/chat/send`, {
       method: 'POST',
       headers: await getHeaders(),
       body: JSON.stringify({ userId, senderId, senderName, text, isAdmin })

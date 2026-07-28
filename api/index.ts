@@ -36,7 +36,9 @@ app.get('/api/db-status', async (req, res) => {
   }
 });
 
-// Vercel handles static files automatically, so we don't need app.get('*') here
-// when using the rewrites in vercel.json.
+// Final JSON Error Handler for 404s
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: "API Route Not Found", path: req.originalUrl });
+});
 
 export default app;
