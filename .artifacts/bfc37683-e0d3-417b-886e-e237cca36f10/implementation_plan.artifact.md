@@ -1,38 +1,41 @@
-# خطة إصلاح أخطاء الـ 500 وتوحيد المسارات النهائية
+# خطة التشخيص النهائي وإصلاح أخطاء الـ 500 (Deep Debugging)
 
-بعد تحليل الكونسول، اكتشفت أن هناك "تضارباً" في أسماء المسارات بين ما يطلبه الفرونت اند وما يوفره الباك اند، بالإضافة إلى وجود دوال مفقودة في المتحكمات الجديدة. هذا التضارب هو ما يسبب أخطاء 500 و 404.
+تكرار أخطاء الـ 500 رغم صحة الكود المنطقي يعني وجود "انهيار" (Crash) في السيرفر أثناء التشغيل الأولي، غالباً بسبب متغيرات البيئة أو طريقة قراءتها. هذه الخطة تهدف لجعل السيرفر "يتحدث" ويخبرنا بالسبب الحقيقي للانهيار.
 
 ## User Review Required
 
 > [!IMPORTANT]
-> **إصلاح المسارات (Path Correction)**: سنقوم بتحديث `api.js` في الفرونت اند ليتطابق تماماً مع هيكلية الباك اند الجديدة المنظمة.
+> **الخطأ 500 المستمر**: سنقوم بتعطيل "الانهيار التلقائي" للسيرفر. بدلاً من أن يتوقف السيرفر عند وجود خطأ في مفتاح فيرباس مثلاً، سيستمر في العمل وسيرد عليك برسالة JSON واضحة بالخطأ.
 >
-> **إضافة الدوال المفقودة**: سنعيد إضافة دالة `updatePhone` ودوال أخرى كانت موجودة في الملف القديم ولم تُنقل للملفات الجديدة.
+> **تنبيه الكاش**: الكونسول لا يزال يظهر روابط قديمة (بدون `/user/`). هذا يعني أن متصفحك **يجب** أن يتم تنظيفه بالكامل (Clear Site Data) لأن النسخة القديمة من ملفات الجافاسكريبت لا تزال عالقة لديك.
 
 ## Proposed Changes
 
-### 1. تحديث الفرونت اند (Frontend)
+### 1. تأمين الإعدادات ضد الانهيار (Safe Configs)
 
-#### [MODIFY] [src/lib/api.js](file:///C:/Users/alfaa/Desktop/getProject/src/lib/api.js)
-- تصحيح مسار `getChatMessages` ليصبح `/api/user/chat/messages/` بدلاً من `/api/chat/messages/`.
-- تصحيح مسار `sendChatMessage` ليصبح `/api/user/chat/send` بدلاً من `/api/chat/send`.
+#### [MODIFY] [backend/config/db.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/config/db.ts)
+- إضافة تحقق صارم قبل طباعة الـ Logs لمنع خطأ `undefined.substring`.
 
-### 2. تحديث الباك اند (Backend)
+#### [MODIFY] [backend/config/firebase.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/config/firebase.ts)
+- منع السيرفر من الانهيار إذا كان مفتاح فيرباس خاطئاً، وبدلاً من ذلك تسجيل تحذير في الـ Logs.
 
-#### [MODIFY] [backend/controllers/userController.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/controllers/userController.ts)
-- إضافة دالة `updatePhone` الرسمية للتعامل مع طلبات تحديث رقم الهاتف بشكل منفصل.
-
-#### [MODIFY] [backend/routes/userRoutes.ts](file:///C:/Users/alfaa/Desktop/getProject/backend/routes/userRoutes.ts)
-- إضافة مسار `router.post('/update-phone', userController.updatePhone)`.
+### 2. ميزة "كاشف الأخطاء" (Global Error Catcher)
 
 #### [MODIFY] [api/index.ts](file:///C:/Users/alfaa/Desktop/getProject/api/index.ts)
-- إضافة معالج أخطاء نهائي (Catch-all) يرجع JSON بدلاً من HTML عند حدوث خطأ في المسارات، لسهولة قراءتها في الكونسول.
+- إضافة Middleware في بداية الملف يمسك أي خطأ (Uncaught Exception) ويرسله فوراً للكونسول كـ JSON. هذا سيحول رسالة "Internal Server Error" المبهمة إلى رسالة تشرح "أين المشكلة بالضبط".
+
+### 3. تحسين نظام التوجيه لـ Vercel
+
+#### [MODIFY] [vercel.json](file:///C:/Users/alfaa/Desktop/getProject/vercel.json)
+- ضبط دقيق لمسارات الـ Assets والـ API لضمان وصول كل طلب لوجهته الصحيحة.
 
 ---
 
 ## Verification Plan
 
+### Automated Tests
+- بعد الرفع، اطلب مسار `/api/debug/config-check`.
+- إذا ظهرت صفحة JSON تخبرك بوجود خطأ في "FIREBASE_SERVICE_ACCOUNT" أو "MONGODB_URI"، فسنعرف أين الخلل بالضبط.
+
 ### Manual Verification
-- تجربة تحديث رقم الهاتف من البروفايل.
-- تجربة فتح الشات والتأكد من تحميل الرسائل بدون خطأ 500.
-- التحقق من رابط `https://your-domain.com/api/db-status` للتأكد من زوال الـ 404.
+- **خطوة إجبارية**: يرجى فتح المتصفح -> اضغط F12 -> اذهب لتبويب Application -> ثم Storage -> ثم اضغط على **Clear site data**. هذا سيجبر المتصفح على استخدام الكود الجديد.

@@ -1,12 +1,13 @@
-# مهام إصلاح أخطاء المسارات وتفعيل الربط النهائي
+# مهام التشخيص النهائي وإصلاح أخطاء الـ 500
 
-- `[x]` تصحيح مسارات الفرونت اند (Frontend)
-    - `[x]` تحديث `src/lib/api.js` ليتوافق مع هيكلية `/api/user/`
-- `[x]` تحديث المتحكمات والمسارات (Backend)
-    - `[x]` إضافة دالة `updatePhone` في `userController.ts`
-    - `[x]` ربط المسار في `userRoutes.ts`
-- `[x]` تحسين معالجة الأخطاء
-    - `[x]` تحديث `api/index.ts` لإرجاع أخطاء JSON واضحة
-- `[/]` التحقق والرفع
-    - `[ ]` Git add, commit, push
-    - `[ ]` اختبار الرابط `api/db-status`
+- `[/]` تأمين إعدادات الباك اند (Backend Safety)
+    - `[ ]` تحديث `backend/config/db.ts` بمنطق فحص آمن
+    - `[ ]` تحديث `backend/config/firebase.ts` لمنع الانهيار الكلي
+- `[/]` تفعيل كاشف الأخطاء (Error Catcher)
+    - `[ ]` إضافة Global Error Handler في `api/index.ts`
+- `[ ]` ضبط التوجيه النهائي (Vercel Config)
+    - `[ ]` تحديث `vercel.json` بمحددات دقيقة
+- `[ ]` الرفع والتحقق
+    - `[ ]` تنفيذ Git push
+    - `[ ]` مسح بيانات المتصفح (Clear Site Data)
+    - `[ ]` اختبار رابط التشخيص

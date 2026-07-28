@@ -5,36 +5,36 @@ if (!admin.apps.length) {
   try {
     const serviceAccountVar = process.env.FIREBASE_SERVICE_ACCOUNT;
 
-    if (serviceAccountVar) {
+    if (serviceAccountVar && serviceAccountVar.trim().length > 10) {
       let serviceAccount;
       try {
-        // تنظيف متغير البيئة من أي مسافات زائدة أو علامات اقتباس خارجية قد تضيفها بعض المنصات
         const cleanJson = serviceAccountVar.trim().replace(/^['"]|['"]$/g, '');
         serviceAccount = JSON.parse(cleanJson);
 
-        // إصلاح مشكلة رموز سطر جديد في المفتاح الخاص
         if (serviceAccount.private_key) {
           serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
         }
-      } catch (e) {
-        console.error("❌ Failed to parse FIREBASE_SERVICE_ACCOUNT JSON. Error:", e);
-        console.error("Raw value starts with:", serviceAccountVar.substring(0, 50));
-        throw e;
-      }
 
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-      });
-      console.log("🔥 Firebase Admin initialized via Environment Variable");
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount)
+        });
+        console.log("🔥 Firebase Admin initialized via Environment Variable");
+      } catch (e) {
+        console.error("❌ CRITICAL: Failed to parse FIREBASE_SERVICE_ACCOUNT JSON:", e.message);
+        // لا ننهي البرنامج هنا، لكي يعمل مسار التشخيص
+      }
     } else {
-      // محاولة استخدام الاعتمادات التلقائية إذا لم يوجد متغير البيئة
-      admin.initializeApp({
-        credential: admin.credential.applicationDefault()
-      });
-      console.log("🔥 Firebase Admin initialized via Application Default Credentials");
+      console.warn("⚠️ FIREBASE_SERVICE_ACCOUNT is missing or too short. Trying Default Credentials...");
+      try {
+        admin.initializeApp({
+          credential: admin.credential.applicationDefault()
+        });
+      } catch (e) {
+        console.error("❌ Firebase Admin: No credentials available.");
+      }
     }
   } catch (error) {
-    console.error("❌ Firebase Admin initialization error:", error);
+    console.error("❌ Firebase Admin initialization error:", error.message);
   }
 }
 
