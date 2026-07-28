@@ -6,7 +6,7 @@ export interface AuthRequest extends Request {
   user?: any;
 }
 
-export const syncUser = async (req: AuthRequest, res: Response) => {
+export const syncUser = async (req: any, res: any) => {
   try {
     const { uid, email, displayName, photoURL } = req.body;
     if (!uid || !email) {

@@ -20,13 +20,13 @@ app.use(cors());
 app.use(express.json());
 
 // API Middlewares & Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/debug', debugRoutes);
+app.use('/api/auth', authRoutes as any);
+app.use('/api/user', userRoutes as any);
+app.use('/api/admin', adminRoutes as any);
+app.use('/api/debug', debugRoutes as any);
 
 // Database Health Check
-app.get('/api/db-status', async (req: Request, res: Response) => {
+app.get('/api/db-status', async (req: any, res: any) => {
   try {
     await connectToDatabase();
     res.json({ status: "connected", database: mongoose.connection.db?.databaseName });

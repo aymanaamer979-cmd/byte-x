@@ -4,7 +4,7 @@ import { userService } from '../services/userService';
 import { transactionService } from '../services/transactionService';
 import { ChatMessage } from '../models/ChatMessage';
 
-export const getProfile = async (req: Request, res: Response) => {
+export const getProfile = async (req: any, res: any) => {
   try {
     const { uid } = req.params;
     const user = await userService.getUserByUid(uid);
@@ -15,7 +15,7 @@ export const getProfile = async (req: Request, res: Response) => {
   }
 };
 
-export const updateProfile = async (req: Request, res: Response) => {
+export const updateProfile = async (req: any, res: any) => {
   try {
     const { uid, displayName, phone } = req.body;
     const updatedUser = await userService.updateProfile(uid, { displayName, phone });
@@ -26,7 +26,7 @@ export const updateProfile = async (req: Request, res: Response) => {
   }
 };
 
-export const updatePresence = async (req: Request, res: Response) => {
+export const updatePresence = async (req: any, res: any) => {
   try {
     const { uid, isOnline } = req.body;
     const updatedUser = await userService.updatePresence(uid, Boolean(isOnline));
@@ -36,7 +36,7 @@ export const updatePresence = async (req: Request, res: Response) => {
   }
 };
 
-export const deposit = async (req: Request, res: Response) => {
+export const deposit = async (req: any, res: any) => {
   try {
     const { uid, amount, description } = req.body;
     const result = await userService.updateFinancials(uid, {
@@ -51,7 +51,7 @@ export const deposit = async (req: Request, res: Response) => {
   }
 };
 
-export const withdraw = async (req: Request, res: Response) => {
+export const withdraw = async (req: any, res: any) => {
   try {
     const { uid, amount, description } = req.body;
     const user = await userService.getUserByUid(uid);
@@ -69,7 +69,7 @@ export const withdraw = async (req: Request, res: Response) => {
   }
 };
 
-export const invest = async (req: Request, res: Response) => {
+export const invest = async (req: any, res: any) => {
   try {
     const { uid, amount } = req.body;
     const user = await userService.getUserByUid(uid);
@@ -87,7 +87,7 @@ export const invest = async (req: Request, res: Response) => {
   }
 };
 
-export const getTransactions = async (req: Request, res: Response) => {
+export const getTransactions = async (req: any, res: any) => {
   try {
     const { uid } = req.params;
     const transactions = await transactionService.getUserTransactions(uid);
@@ -97,7 +97,7 @@ export const getTransactions = async (req: Request, res: Response) => {
   }
 };
 
-export const getChatMessages = async (req: Request, res: Response) => {
+export const getChatMessages = async (req: any, res: any) => {
   try {
     const { uid } = req.params;
     const messages = await ChatMessage.find({ userId: uid }).sort({ createdAt: 1 }).limit(100);
@@ -107,7 +107,7 @@ export const getChatMessages = async (req: Request, res: Response) => {
   }
 };
 
-export const sendChatMessage = async (req: Request, res: Response) => {
+export const sendChatMessage = async (req: any, res: any) => {
   try {
     const { userId, senderId, senderName, text, isAdmin } = req.body;
     const msg = new ChatMessage({

@@ -48,6 +48,8 @@ function formatMongoUri(rawUri: string, targetDb: string = 'more'): string {
 
 const MONGODB_URI = formatMongoUri(process.env.MONGODB_URI || process.env.DATABASE_URL || DEFAULT_MONGODB_URI, 'more');
 
+console.log(`📡 MONGODB_URI Prefix: ${MONGODB_URI.substring(0, 10)}...`);
+
 let cached = (global as any).mongoose;
 if (!cached) {
   cached = (global as any).mongoose = { conn: null, promise: null };

@@ -5,7 +5,7 @@ import { userService } from '../services/userService';
 import { transactionService } from '../services/transactionService';
 import { currencySetter } from '../config/db';
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (req: any, res: any) => {
   try {
     console.log(`🔍 Admin ${req.user?.email} is fetching all users...`);
     const users = await userService.getAllUsers();
@@ -17,7 +17,7 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserStats = async (req: Request, res: Response) => {
+export const getUserStats = async (req: any, res: any) => {
   try {
     const totalUsers = await User.countDocuments();
     const result = await User.aggregate([
@@ -43,7 +43,7 @@ export const getUserStats = async (req: Request, res: Response) => {
   }
 };
 
-export const updateFinancials = async (req: Request, res: Response) => {
+export const updateFinancials = async (req: any, res: any) => {
   try {
     const { uid } = req.params;
     const { balance, investments, profits, depositBonus, depositBonusDate, isVerified, role } = req.body;
@@ -66,7 +66,7 @@ export const updateFinancials = async (req: Request, res: Response) => {
   }
 };
 
-export const adjustBalance = async (req: Request, res: Response) => {
+export const adjustBalance = async (req: any, res: any) => {
   try {
     const { uid } = req.params;
     const { amount, type, description } = req.body;
@@ -89,7 +89,7 @@ export const adjustBalance = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllTransactions = async (req: Request, res: Response) => {
+export const getAllTransactions = async (req: any, res: any) => {
   try {
     const txs = await transactionService.getAllTransactions();
     res.json(txs);
@@ -98,7 +98,7 @@ export const getAllTransactions = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTransactionStatus = async (req: Request, res: Response) => {
+export const updateTransactionStatus = async (req: any, res: any) => {
   try {
     const { id } = req.params;
     const { status, adminNote } = req.body;
