@@ -12,8 +12,13 @@ try {
 
     if (serviceAccountVar && serviceAccountVar.trim().length > 10) {
       try {
-        const cleanJson = serviceAccountVar.trim().replace(/^['"]|['"]$/g, '');
-        serviceAccount = JSON.parse(cleanJson);
+        const cleanJson = serviceAccountVar.trim().replace(/^['"]|['"]$/g, '').trim();
+        // التحقق من أنه يبدأ بـ { وينتهي بـ } لضمان أنه JSON صالح قبل المحاولة
+        if (cleanJson.startsWith('{') && cleanJson.endsWith('}')) {
+          serviceAccount = JSON.parse(cleanJson);
+        } else {
+          console.error("❌ FIREBASE_SERVICE_ACCOUNT is not a valid JSON string (must start with { and end with })");
+        }
       } catch (e) {
         console.error("❌ Firebase Admin JSON Parse Error from Env:", e.message);
       }

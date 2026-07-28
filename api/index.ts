@@ -16,6 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Boot check log
+console.log("🚀 Server is booting up...");
+
 // Request Logger
 app.use((req, res, next) => {
   console.log(`📡 [${req.method}] ${req.url}`);

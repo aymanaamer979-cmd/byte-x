@@ -5,3 +5,6 @@
 - [x] إضافة سجلات تشخيصية (Diagnostics) في `db.ts`
 - [x] تحديث `debugRoutes.ts` ليشمل فحص Firebase
 - [x] تحسين معالجة الأخطاء في `PhoneVerification.jsx` لإظهار تفاصيل الـ 500
+- [x] إنشاء `utils.ts` ونقل `currencySetter` لفك التداخل (Circular Dependency)
+- [x] تحديث الموديلات والخدمات لاستخدام `utils.ts`
+- [x] تأمين إضافي لـ `firebase.ts` ضد أخطاء الـ JSON في Vercel

@@ -47,5 +47,3 @@ export async function connectToDatabase() {
     throw e;
   }
 }
-
-export const currencySetter = (val: number) => Math.round((Number(val) || 0) * 100) / 100;

@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { currencySetter } from '../config/db';
+import { currencySetter } from '../config/utils';
 
 const UserSchema = new mongoose.Schema({
   uid: { type: String, required: true, unique: true, index: true },
