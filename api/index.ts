@@ -1,17 +1,17 @@
 // @ts-nocheck
-// app.ts - REFRESHED VERSION 2.2
+// api/index.ts - Vercel Entry Point
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import cors from 'cors';
 import mongoose from 'mongoose';
 
-// Import Organized Routes
-import { connectToDatabase } from './backend/config/db';
-import authRoutes from './backend/routes/authRoutes';
-import userRoutes from './backend/routes/userRoutes';
-import adminRoutes from './backend/routes/adminRoutes';
-import debugRoutes from './backend/routes/debugRoutes';
+// Import Organized Routes (Updated Paths)
+import { connectToDatabase } from '../backend/config/db';
+import authRoutes from '../backend/routes/authRoutes';
+import userRoutes from '../backend/routes/userRoutes';
+import adminRoutes from '../backend/routes/adminRoutes';
+import debugRoutes from '../backend/routes/debugRoutes';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;

@@ -67,8 +67,12 @@ export async function connectToDatabase() {
       dbName: 'more',
     };
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
-      console.log(`🔌 Connected to MongoDB Atlas: ${mongoose.connection.db?.databaseName}`);
+      console.log(`🚀 DATABASE SUCCESS: Connected to MongoDB Atlas!`);
+      console.log(`📍 Active Database: ${mongoose.connection.db?.databaseName}`);
       return mongooseInstance;
+    }).catch(err => {
+      console.error(`❌ DATABASE CRITICAL ERROR:`, err.message);
+      throw err;
     });
   }
 
