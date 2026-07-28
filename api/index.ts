@@ -37,6 +37,15 @@ app.use('/api/user', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/debug', debugRoutes);
 
+// [NEW] 404 Handler for API
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    error: "API Route Not Found",
+    path: req.originalUrl,
+    hint: "Check if the route is defined in authRoutes, userRoutes, or adminRoutes"
+  });
+});
+
 // Detailed DB Status
 app.get('/api/db-status', async (req, res) => {
   try {

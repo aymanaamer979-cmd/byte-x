@@ -27,8 +27,10 @@ const PhoneVerification = () => {
       await updatePhone(fullNumber);
       navigate('/account', { replace: true });
     } catch (err) {
-      console.error('خطأ أثناء حفظ رقم الهاتف:', err.message);
-      setError(`خطأ أثناء تفعيل الحساب: ${err.message}`);
+      console.error('Error saving phone:', err);
+      // إظهار رسالة الخطأ القادمة من السيرفر إذا وجدت، وإلا رسالة عامة
+      const serverMsg = err.message || 'فشل الاتصال بالخادم';
+      setError(`عذراً، حدث خطأ: ${serverMsg}. تأكد من استقرار الإنترنت وحاول مجدداً.`);
     } finally {
       setLoading(false);
     }

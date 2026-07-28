@@ -28,7 +28,12 @@ export async function connectToDatabase() {
       console.log(`🚀 MongoDB Connected: ${mongoose.connection.db?.databaseName}`);
       return mongooseInstance;
     }).catch(err => {
-      console.error(`❌ MongoDB Connection Error:`, err.message);
+      console.error(`❌ MongoDB Connection Error Details:`);
+      console.error(`   - Message: ${err.message}`);
+      console.error(`   - Code: ${err.code}`);
+      if (err.message.includes('IP')) {
+        console.error(`   - HINT: This looks like a Network Access (IP Whitelist) issue.`);
+      }
       cached.promise = null;
       throw err;
     });

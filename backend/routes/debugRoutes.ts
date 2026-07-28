@@ -1,43 +1,44 @@
 import { Router } from 'express';
 import { User } from '../models/User';
 import { connectToDatabase } from '../config/db';
+import { authAdmin } from '../config/firebase';
 
 const router = Router();
 
 router.get('/config-check', async (req, res) => {
   const hasMongo = !!process.env.MONGODB_URI;
-  const hasFirebase = !!process.env.FIREBASE_SERVICE_ACCOUNT;
-
-  let firebaseValid = false;
-  if (hasFirebase) {
-    try {
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT!);
-      firebaseValid = true;
-    } catch (e) {
-      firebaseValid = false;
-    }
-  }
+  const hasFirebaseEnv = !!process.env.FIREBASE_SERVICE_ACCOUNT;
+  const isFirebaseInitialized = !!authAdmin;
 
   let dbStatus = "Unknown";
   let userCount = 0;
+  let dbError = null;
+
   try {
     await connectToDatabase();
     dbStatus = "✅ Connected to Atlas";
     userCount = await User.countDocuments();
   } catch (err: any) {
-    dbStatus = `❌ Error: ${err.message}`;
+    dbStatus = "❌ Failed";
+    dbError = err.message;
   }
 
   res.json({
     env: {
-      MONGODB_URI: hasMongo ? "✅ Configured" : "❌ Missing",
-      FIREBASE_SERVICE_ACCOUNT: hasFirebase ? (firebaseValid ? "✅ Valid JSON" : "⚠️ Invalid JSON Format") : "❌ Missing"
+      MONGODB_URI: hasMongo ? "✅ Present" : "❌ Missing",
+      FIREBASE_SERVICE_ACCOUNT_ENV: hasFirebaseEnv ? "✅ Present" : "❌ Missing"
+    },
+    firebase: {
+      status: isFirebaseInitialized ? "✅ Initialized" : "❌ Failed",
+      hint: !isFirebaseInitialized ? "Check FIREBASE_SERVICE_ACCOUNT format or serviceAccountKey.json" : "Ready"
     },
     database: {
       status: dbStatus,
+      error: dbError,
       usersInDb: userCount
     },
-    version: "2.1-Diagnostic-Build"
+    serverTime: new Date().toISOString(),
+    version: "2.2-Diagnostic-Deep"
   });
 });
 

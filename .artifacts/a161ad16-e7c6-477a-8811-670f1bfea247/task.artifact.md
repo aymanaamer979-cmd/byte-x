@@ -2,3 +2,6 @@
 - [x] تحسين إعداد Firebase Admin في `firebase.ts`
 - [x] إضافة فحص أمان في `authMiddleware.ts` لمنع الانهيار عند فشل تهيئة Firebase
 - [x] التحقق من استقرار الاتصال بقاعدة البيانات وتفعيل متغيرات البيئة
+- [x] إضافة سجلات تشخيصية (Diagnostics) في `db.ts`
+- [x] تحديث `debugRoutes.ts` ليشمل فحص Firebase
+- [x] تحسين معالجة الأخطاء في `PhoneVerification.jsx` لإظهار تفاصيل الـ 500
