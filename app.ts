@@ -1,4 +1,4 @@
-// server.ts - Clean Entry Point
+// app.ts - REFRESHED VERSION 2.2
 import 'dotenv/config';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
