@@ -16,9 +16,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Log every request to Vercel Logs for visibility
+// Logger for Vercel
 app.use((req, res, next) => {
-  console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  console.log(`📡 [${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
@@ -38,25 +38,24 @@ app.get('/api/db-status', async (req, res) => {
       time: new Date().toISOString()
     });
   } catch (error) {
-    console.error("❌ DB Status Check Failed:", error.message);
+    console.error("❌ DB Status Failed:", error.message);
     res.status(500).json({ status: "disconnected", error: error.message });
   }
 });
 
-// GLOBAL ERROR CATCHER - No more generic 500s!
+// GLOBAL ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error("🔥 UNCAUGHT SERVER ERROR:", err);
+  console.error("🔥 SERVER ERROR:", err);
   res.status(500).json({
-    error: "Server Crash Prevented",
+    error: "Internal Server Error",
     message: err.message,
-    path: req.originalUrl,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : 'Stack hidden in production'
+    path: req.url
   });
 });
 
-// Final JSON Error Handler for 404s
+// Catch-all for API 404s
 app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: "API Route Not Found", path: req.originalUrl });
+  res.status(404).json({ error: "Endpoint Not Found", url: req.originalUrl });
 });
 
 export default app;
