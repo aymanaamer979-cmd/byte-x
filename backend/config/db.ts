@@ -17,19 +17,19 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 10000, // زيادة وقت الانتظار لـ 10 ثوانٍ
+      serverSelectionTimeoutMS: 5000, // 5 seconds max to wait
+      connectTimeoutMS: 5000,
       dbName: 'more',
     };
 
-    console.log("⏳ Attempting to connect to MongoDB Atlas directly...");
+    console.log("⏳ Connecting to MongoDB Atlas...");
 
     cached.promise = mongoose.connect(DIRECT_MONGODB_URI, opts).then((mongooseInstance) => {
-      console.log(`🚀 DATABASE SUCCESS: Connected to MongoDB Atlas!`);
-      console.log(`📍 Active Database: ${mongoose.connection.db?.databaseName}`);
+      console.log(`🚀 DB OK: ${mongoose.connection.db?.databaseName}`);
       return mongooseInstance;
     }).catch(err => {
-      console.error(`❌ DATABASE CONNECTION ERROR:`, err.message);
-      cached.promise = null; // إعادة التعيين للمحاولة مرة أخرى
+      console.error(`❌ DB ERROR:`, err.message);
+      cached.promise = null;
       throw err;
     });
   }
