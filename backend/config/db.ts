@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 
 // It is recommended to set MOREX in your Vercel Environment Variables.
-const MONGODB_URI = process.env.MOREX || "mongodb+srv://aymanaamer979_db_user:morex@more.cmgbgda.mongodb.net/?appName=more";
+const MONGODB_URI = process.env.MOREX || "mongodb+srv://aymanaamer979_db_user:morex@more.cmgbgda.mongodb.net/more?retryWrites=true&w=majority&appName=more";
 
 // Use globalThis for better compatibility with Vercel/Serverless environments
 let cached = (globalThis as any).mongoose;
