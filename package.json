@@ -37,5 +37,13 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "@google/genai",
+      "esbuild",
+      "protobufjs"
+    ]
   }
 }
