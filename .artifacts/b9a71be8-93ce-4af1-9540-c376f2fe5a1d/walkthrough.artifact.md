@@ -18,5 +18,10 @@
 > [!IMPORTANT]
 > تأكد من إضافة المتغير باسم **`MOREX`** في إعدادات **Environment Variables** على منصة **Vercel** ووضع الرابط الجديد هناك لضمان عمل النسخة المرفوعة.
 
-> [!TIP]
-> الرابط الجديد يحتوي على كلمة مرور جديدة (`morex`) وتم اختباره برمجياً في الكود.
+### 4. حل مشكلة pnpm v10/v11
+*   تم إنشاء ملف [.npmrc](file:///C:/Users/alfaa/Desktop/getProject/.npmrc) لنقل إعدادات `only-built-dependencies` إليه، وهو الأسلوب الموصى به في النسخ الحديثة.
+*   تم تنظيف ملف `package.json` لتجنب أي تعارضات أثناء البناء.
+
+> [!IMPORTANT]
+> للرفع بنجاح الآن رغم مشاكل الشبكة، استخدم الأمر التالي:
+> `vercel --prod --force --env NPM_CONFIG_FROZEN_LOCKFILE=false`
