@@ -1,0 +1,4 @@
+- [x] تحديث `backend/config/db.ts` لاستخدام `MOREX` والرابط الجديد
+- [x] تحديث `backend/routes/debugRoutes.ts` لفحص `MOREX`
+- [x] تحديث `.env.example` لتوضيح المتغير الجديد
+- [x] إنشاء ملف المراجعة النهائية (Walkthrough)

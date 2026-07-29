@@ -6,7 +6,7 @@ import { getAuthAdmin } from '../config/firebase';
 const router = Router();
 
 router.get('/config-check', async (req, res) => {
-  const hasMongo = !!process.env.MONGODB_URI;
+  const hasMongo = !!process.env.MOREX;
   const hasFirebaseEnv = !!process.env.FIREBASE_SERVICE_ACCOUNT;
   const adminAuth = getAuthAdmin();
   const isFirebaseInitialized = !!adminAuth;
@@ -26,7 +26,7 @@ router.get('/config-check', async (req, res) => {
 
   res.json({
     env: {
-      MONGODB_URI: hasMongo ? "✅ Present" : "❌ Missing",
+      MOREX: hasMongo ? "✅ Present" : "❌ Missing",
       FIREBASE_SERVICE_ACCOUNT_ENV: hasFirebaseEnv ? "✅ Present" : "❌ Missing"
     },
     firebase: {
